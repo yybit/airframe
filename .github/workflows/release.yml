@@ -1,0 +1,262 @@
+name: Release
+
+# Build installers/packages for macOS, Windows and Linux and publish them on a
+# GitHub Release. Triggered by a version tag (`v0.1.0`) or by hand from the
+# Actions tab; macOS packages are signed and notarised only when the matching
+# secrets are configured, otherwise they ship ad-hoc signed (unsigned Windows
+# installers trigger a SmartScreen prompt).
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release (default: workspace Cargo.toml version)"
+        type: string
+        default: ""
+
+permissions: {}
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: always
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  macos:
+    name: macOS universal (zip + dmg)
+    timeout-minutes: 60
+    runs-on: macos-latest
+    env:
+      APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+      APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+      KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Build both slices
+        run: |
+          cargo build --release --target aarch64-apple-darwin -p airframe
+          cargo build --release --target x86_64-apple-darwin -p airframe
+
+      # Warm the host-target cache so package.sh's icon export is a no-op rebuild.
+      - name: Pre-build icon exporter
+        run: cargo run --release -p airframe --example export_app_icon -- /tmp/pre.icns
+
+      - name: Package AirFrame.app
+        run: packaging/macos/package.sh --arch universal --skip-build
+
+      - name: Sign with Developer ID
+        if: env.APPLE_CERTIFICATE != ''
+        run: |
+          version=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)
+          app="dist/AirFrame-$version-macos-universal/AirFrame.app"
+          echo "$APPLE_CERTIFICATE" | base64 --decode > cert.p12
+          security create-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+          security import cert.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" \
+              -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" build.keychain
+          codesign --force --options runtime --timestamp \
+              --sign "Developer ID Application" "$app"
+          codesign --verify --deep --strict "$app"
+          rm cert.p12
+
+      - name: Zip the signed app
+        if: env.APPLE_CERTIFICATE != ''
+        run: |
+          version=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)
+          cd "dist/AirFrame-$version-macos-universal"
+          ditto -c -k --keepParent AirFrame.app "../AirFrame-$version-macos-universal.zip"
+
+      - name: Notarize and staple the app
+        if: env.APPLE_CERTIFICATE != ''
+        run: |
+          version=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)
+          zip="dist/AirFrame-$version-macos-universal.zip"
+          app="dist/AirFrame-$version-macos-universal/AirFrame.app"
+          xcrun notarytool submit "$zip" --apple-id "$APPLE_ID" --password "$APPLE_PASSWORD" \
+              --team-id "$APPLE_TEAM_ID" --wait
+          xcrun stapler staple "$app"
+          cd "dist/AirFrame-$version-macos-universal"
+          ditto -c -k --keepParent AirFrame.app "../AirFrame-$version-macos-universal.zip"
+
+      - name: Build DMG
+        run: |
+          version=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)
+          stage="dist/AirFrame-$version-macos-universal"
+          mkdir -p dist/.dmg
+          cp -R "$stage/AirFrame.app" dist/.dmg/
+          ln -s /Applications dist/.dmg/Applications
+          hdiutil create -volname AirFrame -srcfolder dist/.dmg -fs HFS+ -format UDZO -ov \
+              "dist/AirFrame-$version-macos-universal.dmg"
+          rm -rf dist/.dmg
+
+      - name: Notarize and staple the DMG
+        if: env.APPLE_CERTIFICATE != ''
+        run: |
+          version=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)
+          dmg="dist/AirFrame-$version-macos-universal.dmg"
+          xcrun notarytool submit "$dmg" --apple-id "$APPLE_ID" --password "$APPLE_PASSWORD" \
+              --team-id "$APPLE_TEAM_ID" --wait
+          xcrun stapler staple "$dmg"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          path: |
+            dist/AirFrame-*-macos-universal.zip
+            dist/AirFrame-*-macos-universal.dmg
+          if-no-files-found: error
+
+  windows:
+    name: Windows x64 (zip + msi)
+    timeout-minutes: 60
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Build
+        run: cargo build --release -p airframe
+
+      - name: Export icons
+        run: |
+          mkdir -p dist
+          cargo run --release -p airframe --example export_app_icons -- dist
+
+      - name: Install WiX Toolset v5
+        run: |
+          dotnet tool install --global wix --version 5.0.2
+          wix extension add -g WixToolset.UI.wixext/5.0.2
+
+      - name: Build MSI
+        run: |
+          version=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)
+          mkdir -p dist
+          wix build packaging/windows/airframe.wxs -arch x64 \
+              -ext WixToolset.UI.wixext \
+              -d Version="$version" -d BinDir=target\\release \
+              -d IconPath=dist\\airframe.ico \
+              -out "dist/AirFrame-$version-windows-x64.msi"
+
+      - name: Build portable zip
+        run: |
+          version=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)
+          mkdir -p "dist/AirFrame-$version-windows-x64"
+          cp target/release/airframe.exe "dist/AirFrame-$version-windows-x64/"
+          powershell -Command "Compress-Archive -Path 'dist/AirFrame-$version-windows-x64/*' -DestinationPath 'dist/AirFrame-$version-windows-x64.zip' -Force"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: |
+            dist/AirFrame-*-windows-x64.zip
+            dist/AirFrame-*-windows-x64.msi
+          if-no-files-found: error
+
+  linux:
+    name: Linux ${{ matrix.arch }} (tar + deb + rpm + AppImage)
+    timeout-minutes: 40
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Ubuntu 22.04 has the oldest glibc (2.35) still available, so the
+          # binaries run on most desktop distros.
+          - arch: x86_64
+            runner: ubuntu-22.04
+          # Native arm runner (public repos); drop this entry if unavailable.
+          - arch: aarch64
+            runner: ubuntu-22.04-arm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          prefix-key: linux-${{ matrix.arch }}
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libxkbcommon-dev libxkbcommon-x11-dev libwayland-dev
+
+      - name: Package
+        run: packaging/linux/package.sh --arch ${{ matrix.arch }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-${{ matrix.arch }}
+          path: |
+            dist/airframe-*-linux-${{ matrix.arch }}.tar.gz
+            dist/airframe-*-linux-${{ matrix.arch }}.deb
+            dist/airframe-*-linux-${{ matrix.arch }}.rpm
+            dist/AirFrame-*-linux-${{ matrix.arch }}.AppImage
+          if-no-files-found: error
+
+  release:
+    name: GitHub Release
+    needs: [macos, windows, linux]
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # create the release and upload assets
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Checksums
+        run: |
+          cd dist
+          sha256sum -- * > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - name: Resolve version and tag
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          if [[ -n $INPUT_VERSION ]]; then
+              version="$INPUT_VERSION"
+          elif [[ "$GITHUB_REF_TYPE" == tag ]]; then
+              version="${GITHUB_REF_NAME#v}"
+          else
+              version=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)
+              if [[ -z $version ]]; then
+                  echo "no version input, not a tag, and no Cargo.toml — cannot name the release" >&2
+                  exit 1
+              fi
+          fi
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+          echo "TAG=v$version" >> "$GITHUB_ENV"
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+              gh release upload "$TAG" --clobber dist/*
+          else
+              gh release create "$TAG" dist/* \
+                  --title "AirFrame $VERSION" \
+                  --generate-notes
+          fi

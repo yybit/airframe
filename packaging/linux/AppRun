@@ -1,0 +1,5 @@
+#!/bin/sh
+# AppImage entry point: run the bundled binary relative to this script so the
+# image works no matter where it is mounted.
+HERE=$(dirname "$(readlink -f "$0")")
+exec "$HERE/usr/bin/airframe" "$@"

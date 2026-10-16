@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=AirFrame
+GenericName=Remote Desktop Client
+Comment=Connect to VNC, RDP and SPICE remote desktops
+Exec=airframe
+Icon=airframe
+Terminal=false
+Categories=Network;RemoteAccess;
+Keywords=vnc;rdp;spice;remote;desktop;
+StartupWMClass=airframe

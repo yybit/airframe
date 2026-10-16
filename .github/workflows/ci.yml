@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+permissions: {}
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  lint:
+    name: clippy (ubuntu)
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libxkbcommon-dev libxkbcommon-x11-dev libwayland-dev
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+
+  test:
+    name: test (ubuntu)
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    env:
+      # The UI snapshot goldens in apps/airframe/tests/snapshots were rendered
+      # with Mesa's software GL rasteriser; keep CI on the same renderer.
+      WGPU_BACKEND: gl
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          prefix-key: test
+      - name: Install Linux build and test dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libxkbcommon-dev libxkbcommon-x11-dev libwayland-dev libegl1 libgl1
+      - run: cargo test --workspace
+
+  windows:
+    name: clippy (windows)
+    timeout-minutes: 30
+    runs-on: windows-latest
+    # Compile check only: the pixel snapshot tests are renderer-sensitive and
+    # only run on Linux (see the test job).
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo clippy --workspace --all-targets -- -D warnings
