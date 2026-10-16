@@ -4,7 +4,7 @@
 
 # AirFrame
 
-**VNC, RDP and SPICE desktops in one native window.**
+**One native remote desktop for VNC, RDP and SPICE.**
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Rust](https://img.shields.io/badge/rust-1.95%2B-orange.svg)](https://www.rust-lang.org)

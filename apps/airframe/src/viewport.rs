@@ -120,8 +120,8 @@ pub fn onboarding(ui: &mut Ui, theme: Theme, lang: Lang) -> Vec<Action> {
         ui.add_space(6.0);
         ui.label(
             RichText::new(lang.pick(
-                "VNC, RDP and SPICE desktops in one native window.",
-                "在一个原生窗口中连接 VNC、RDP 和 SPICE 桌面。",
+                "One native remote desktop for VNC, RDP and SPICE.",
+                "一个原生远程桌面，支持 VNC、RDP 和 SPICE。",
             ))
             .size(13.0)
             .color(p.text_dim),

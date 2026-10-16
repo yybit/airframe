@@ -4,7 +4,7 @@
 
 # AirFrame
 
-**一个原生窗口，连接 VNC、RDP 和 SPICE 桌面。**
+**一个原生远程桌面客户端，支持 VNC、RDP 和 SPICE。**
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Rust](https://img.shields.io/badge/rust-1.95%2B-orange.svg)](https://www.rust-lang.org)

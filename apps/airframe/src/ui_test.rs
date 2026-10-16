@@ -104,7 +104,7 @@ fn harness(app: App) -> Harness<'static, App> {
 fn onboarding_dark() {
     let mut harness = harness(app(Theme::Dark, Vec::new()));
     harness.run();
-    harness.get_by_label_contains("VNC, RDP and SPICE desktops");
+    harness.get_by_label_contains("One native remote desktop");
     harness.snapshot("onboarding-dark");
 }
 
