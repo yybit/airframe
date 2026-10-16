@@ -1,0 +1,15 @@
+# Cloudflare Pages configuration.
+#
+# The Pages project is connected to this repo via the Cloudflare dashboard
+# (Workers & Pages → Create → Pages → Connect to Git). In the build setup:
+#   - Root directory (advanced): website
+#   - Production branch:         main
+#   - Build command:             (leave empty — the site is pre-built static files)
+# The settings below are then picked up from this file automatically.
+#
+# Local preview / manual deploy from inside website/:
+#   npx wrangler pages dev .
+#   npx wrangler pages deploy . --project-name=airframe
+
+name = "airframe"
+pages_build_output_dir = "."
