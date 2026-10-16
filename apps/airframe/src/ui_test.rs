@@ -15,7 +15,7 @@ use std::net::{Ipv4Addr, SocketAddr, TcpListener};
 use std::path::PathBuf;
 
 use airframe_core::{Connection, Lang, Protocol, RdpOptions, Store, Theme};
-use egui_kittest::Harness;
+use egui_kittest::{Harness, SnapshotOptions};
 use egui_kittest::kittest::Queryable;
 use uuid::Uuid;
 
@@ -92,10 +92,21 @@ fn sample_connections() -> Vec<Connection> {
 }
 
 /// A harness sized like the real window, with wgpu rendering for snapshots.
+///
+/// The comparison explicitly tolerates renderer noise: different GPUs and
+/// llvmpipe versions anti-alias text a hair differently (GitHub's CI renderer
+/// once differed from a local one on ~0.3% of pixels, every difference below
+/// a YIQ distance of 1.0 — an invisible, sub-1/255-level change). Threshold
+/// 1.0 plus a 32-pixel budget still fails any real visual regression, which
+/// moves hundreds of pixels by distances far above 1.0.
 fn harness(app: App) -> Harness<'static, App> {
+    let mut options = SnapshotOptions::default();
+    options.threshold = 1.0;
+    options.max_failed_pixels = 32;
     Harness::builder()
         .with_size([1280.0, 800.0])
         .with_pixels_per_point(1.0)
+        .with_options(options)
         .wgpu()
         .build_ui_state(|ui, app: &mut App| app.draw(ui), app)
 }

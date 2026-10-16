@@ -1,6 +1,7 @@
 # Build artifacts
 /target
 /dist
+*.diff.png
 
 # OS
 .DS_Store
