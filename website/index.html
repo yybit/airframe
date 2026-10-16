@@ -7,10 +7,11 @@
   <meta name="description" content="AirFrame is a native remote-desktop client for VNC, RDP and SPICE. GPU-rendered, keyboard-layout independent, dark & light themes. Free and open source." />
 
   <!-- Release maintenance: the direct-download buttons use
-       .../releases/latest/download/AirFrame-<version>-macos-<arch>.zip,
-       which resolves to the newest release with a matching asset name.
-       Bump the version in the button URLs when cutting a release,
-       or point them at .../releases/latest instead. -->
+       .../releases/latest/download/AirFrame-<version>-<platform>-<arch>.<ext>
+       (e.g. AirFrame-0.1.0-macos-universal.dmg), which resolves to the
+       newest release with a matching asset name. Bump the version in the
+       button URLs when cutting a release, or point them at
+       .../releases/latest instead. -->
   <meta property="og:title" content="AirFrame — one native remote desktop for VNC, RDP and SPICE" />
   <meta property="og:description" content="A native remote-desktop client built in Rust. Free and open source." />
   <meta property="og:url" content="https://airframe.pages.dev/" />
@@ -50,22 +51,26 @@
       <div class="badges">
         <span class="badge">Version <b>0.1.0</b></span>
         <span class="badge"><b>Apache-2.0</b> licensed</span>
-        <span class="badge">macOS · Linux</span>
+        <span class="badge">macOS · Windows · Linux</span>
       </div>
 
       <div class="download" id="download">
-        <a class="btn btn-primary" href="https://github.com/yybit/airframe/releases/latest/download/AirFrame-0.1.0-macos-aarch64.zip">
+        <a class="btn btn-primary" href="https://github.com/yybit/airframe/releases/latest/download/AirFrame-0.1.0-macos-universal.dmg">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a1 1 0 0 1 1 1v9.59l3.3-3.3a1 1 0 1 1 1.4 1.42l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.42l3.3 3.3V4a1 1 0 0 1 1-1ZM4 19a1 1 0 0 1 1-1h14a1 1 0 1 1 0 2H5a1 1 0 0 1-1-1Z"/></svg>
-          <span>Download for macOS<small>Apple Silicon · macOS 13+</small></span>
+          <span>Download for macOS<small>Universal (Apple Silicon + Intel) · macOS 13+</small></span>
         </a>
-        <a class="btn btn-secondary" href="https://github.com/yybit/airframe/releases/latest/download/AirFrame-0.1.0-macos-x86_64.zip">
+        <a class="btn btn-secondary" href="https://github.com/yybit/airframe/releases/latest/download/AirFrame-0.1.0-windows-x64.msi">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5 10.5 4.4V11H3V5.5ZM3 12.5H10.5V19.6L3 18.5V12.5ZM11.5 12.5H21V20.9L11.5 19.75V12.5ZM11.5 4.25 21 3.1V11H11.5V4.25Z"/></svg>
+          <span>Download for Windows<small>x64 · .msi installer</small></span>
+        </a>
+        <a class="btn btn-secondary" href="https://github.com/yybit/airframe/releases/latest/download/AirFrame-0.1.0-linux-x86_64.AppImage">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a1 1 0 0 1 1 1v9.59l3.3-3.3a1 1 0 1 1 1.4 1.42l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.42l3.3 3.3V4a1 1 0 0 1 1-1ZM4 19a1 1 0 0 1 1-1h14a1 1 0 1 1 0 2H5a1 1 0 0 1-1-1Z"/></svg>
-          <span>macOS (Intel)<small>x86_64 · macOS 13+</small></span>
+          <span>Linux<small>x64 · AppImage</small></span>
         </a>
       </div>
       <p class="download-note">
-        Linux: build from source with <code>cargo install --path apps/airframe</code> — see the <a href="https://github.com/yybit/airframe#building-from-source">README</a>.
-        Windows is not tested yet.
+        Also on <a href="https://github.com/yybit/airframe/releases">Releases</a>: <code>.zip</code> bundles, <code>.deb</code> / <code>.rpm</code> / <code>.tar.gz</code> and aarch64 builds —
+        or build from source with <code>cargo install --path apps/airframe</code>.
       </p>
 
       <div class="shot">
@@ -90,7 +95,7 @@
         <div class="card">
           <div class="icon"><svg viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z"/></svg></div>
           <h3>Native &amp; GPU-rendered</h3>
-          <p>Built on egui/wgpu. Starts instantly, sips memory, and runs natively on X11, Wayland and macOS.</p>
+          <p>Built on egui/wgpu. Starts instantly, sips memory, and runs natively on Linux (X11/Wayland), macOS and Windows.</p>
         </div>
         <div class="card">
           <div class="icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
@@ -177,7 +182,7 @@
       <div class="download">
         <a class="btn btn-primary" href="https://github.com/yybit/airframe/releases/latest">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a1 1 0 0 1 1 1v9.59l3.3-3.3a1 1 0 1 1 1.4 1.42l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.42l3.3 3.3V4a1 1 0 0 1 1-1ZM4 19a1 1 0 0 1 1-1h14a1 1 0 1 1 0 2H5a1 1 0 0 1-1-1Z"/></svg>
-          <span>Get AirFrame<small>macOS builds on GitHub Releases</small></span>
+          <span>Get AirFrame<small>Installers for macOS, Windows and Linux</small></span>
         </a>
         <a class="btn btn-secondary" href="https://github.com/yybit/airframe" target="_blank" rel="noopener">
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>

@@ -7,9 +7,10 @@
   <meta name="description" content="AirFrame 是一个用 Rust 编写的原生远程桌面客户端，支持 VNC、RDP 和 SPICE。GPU 加速、键盘布局无关、深浅色主题，免费开源。" />
 
   <!-- 发布维护说明：下载按钮直链
-       .../releases/latest/download/AirFrame-<版本>-macos-<架构>.zip，
-       会自动解析到资产名匹配的最新 release。发新版本时记得同步
-       更新按钮链接里的版本号，或改为指向 .../releases/latest。 -->
+       .../releases/latest/download/AirFrame-<版本>-<平台>-<架构>.<后缀>
+       （如 AirFrame-0.1.0-macos-universal.dmg），会自动解析到资产名
+       匹配的最新 release。发新版本时记得同步更新按钮链接里的版本号，
+       或改为指向 .../releases/latest。 -->
   <meta property="og:title" content="AirFrame — 一个原生远程桌面，支持 VNC、RDP 和 SPICE" />
   <meta property="og:description" content="用 Rust 打造的原生远程桌面客户端，免费开源。" />
   <meta property="og:url" content="https://airframe.pages.dev/zh/" />
@@ -49,22 +50,26 @@
       <div class="badges">
         <span class="badge">版本 <b>0.1.0</b></span>
         <span class="badge"><b>Apache-2.0</b> 许可证</span>
-        <span class="badge">macOS · Linux</span>
+        <span class="badge">macOS · Windows · Linux</span>
       </div>
 
       <div class="download" id="download">
-        <a class="btn btn-primary" href="https://github.com/yybit/airframe/releases/latest/download/AirFrame-0.1.0-macos-aarch64.zip">
+        <a class="btn btn-primary" href="https://github.com/yybit/airframe/releases/latest/download/AirFrame-0.1.0-macos-universal.dmg">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a1 1 0 0 1 1 1v9.59l3.3-3.3a1 1 0 1 1 1.4 1.42l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.42l3.3 3.3V4a1 1 0 0 1 1-1ZM4 19a1 1 0 0 1 1-1h14a1 1 0 1 1 0 2H5a1 1 0 0 1-1-1Z"/></svg>
-          <span>下载 macOS 版<small>Apple Silicon · macOS 13+</small></span>
+          <span>下载 macOS 版<small>通用二进制（Apple Silicon + Intel）· macOS 13+</small></span>
         </a>
-        <a class="btn btn-secondary" href="https://github.com/yybit/airframe/releases/latest/download/AirFrame-0.1.0-macos-x86_64.zip">
+        <a class="btn btn-secondary" href="https://github.com/yybit/airframe/releases/latest/download/AirFrame-0.1.0-windows-x64.msi">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5 10.5 4.4V11H3V5.5ZM3 12.5H10.5V19.6L3 18.5V12.5ZM11.5 12.5H21V20.9L11.5 19.75V12.5ZM11.5 4.25 21 3.1V11H11.5V4.25Z"/></svg>
+          <span>下载 Windows 版<small>x64 · .msi 安装包</small></span>
+        </a>
+        <a class="btn btn-secondary" href="https://github.com/yybit/airframe/releases/latest/download/AirFrame-0.1.0-linux-x86_64.AppImage">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a1 1 0 0 1 1 1v9.59l3.3-3.3a1 1 0 1 1 1.4 1.42l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.42l3.3 3.3V4a1 1 0 0 1 1-1ZM4 19a1 1 0 0 1 1-1h14a1 1 0 1 1 0 2H5a1 1 0 0 1-1-1Z"/></svg>
-          <span>macOS (Intel)<small>x86_64 · macOS 13+</small></span>
+          <span>Linux<small>x64 · AppImage</small></span>
         </a>
       </div>
       <p class="download-note">
-        Linux：从源码构建 <code>cargo install --path apps/airframe</code>，详见 <a href="https://github.com/yybit/airframe#从源码构建">README</a>。
-        Windows 暂未测试。
+        <a href="https://github.com/yybit/airframe/releases">Releases</a> 页另有 <code>.zip</code>、<code>.deb</code> / <code>.rpm</code> / <code>.tar.gz</code> 及 aarch64 版本——
+        也可以从源码构建：<code>cargo install --path apps/airframe</code>。
       </p>
 
       <div class="shot">
@@ -89,7 +94,7 @@
         <div class="card">
           <div class="icon"><svg viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z"/></svg></div>
           <h3>原生 GPU 渲染</h3>
-          <p>基于 egui/wgpu。秒级启动、内存占用低，在 X11、Wayland 和 macOS 上原生运行。</p>
+          <p>基于 egui/wgpu。秒级启动、内存占用低，在 Linux (X11/Wayland)、macOS 和 Windows 上原生运行。</p>
         </div>
         <div class="card">
           <div class="icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
@@ -176,7 +181,7 @@
       <div class="download">
         <a class="btn btn-primary" href="https://github.com/yybit/airframe/releases/latest">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a1 1 0 0 1 1 1v9.59l3.3-3.3a1 1 0 1 1 1.4 1.42l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.42l3.3 3.3V4a1 1 0 0 1 1-1ZM4 19a1 1 0 0 1 1-1h14a1 1 0 1 1 0 2H5a1 1 0 0 1-1-1Z"/></svg>
-          <span>获取 AirFrame<small>macOS 安装包见 GitHub Releases</small></span>
+          <span>获取 AirFrame<small>提供 macOS、Windows 和 Linux 安装包</small></span>
         </a>
         <a class="btn btn-secondary" href="https://github.com/yybit/airframe" target="_blank" rel="noopener">
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>

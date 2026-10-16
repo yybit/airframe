@@ -9,7 +9,7 @@
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Rust](https://img.shields.io/badge/rust-1.95%2B-orange.svg)](https://www.rust-lang.org)
 [![Version](https://img.shields.io/badge/version-0.1.0-green.svg)]()
-[![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS-lightgrey.svg)](#从源码构建)
+[![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey.svg)](#从源码构建)
 
 [简体中文](#) · [English](README.md)
 
@@ -23,10 +23,12 @@
 
 AirFrame 是一个用 Rust 编写的原生远程桌面客户端。它把三种主流协议——VNC、RDP 和 SPICE——装进同一个轻量、GPU 加速的界面里，用统一的方式管理连接、输入和剪贴板，无需为每台机器各装一个客户端。
 
+macOS、Windows 和 Linux 的预构建安装包发布在 [GitHub Releases](https://github.com/yybit/airframe/releases/latest)。
+
 ## 特性
 
 - **三种协议，一个客户端** — VNC (RFB)、RDP、SPICE；新建连接时选协议，端口自动填好默认值
-- **原生 GPU 界面** — 基于 egui/eframe (wgpu)，Linux (X11/Wayland) 与 macOS 上开箱即用
+- **原生 GPU 界面** — 基于 egui/eframe (wgpu)，Linux (X11/Wayland)、macOS 和 Windows 上开箱即用
 - **连接管理** — 分组、搜索、标签页（Ctrl+T 新建 / Ctrl+W 关闭 / Ctrl+Tab 切换）、`vnc://` / `rdp://` / `spice://` 链接导入分享
 - **舒适的远程会话** — 悬浮工具栏、全屏 (F11)、三种缩放（适应窗口 / 1:1 / 拉伸）、只读模式
 - **剪贴板与文本输入** — 与远程主机同步剪贴板文本；Ctrl+Shift+V 打开发送文本窗口，绕过键盘映射直接输入
@@ -55,7 +57,7 @@ AirFrame 是一个用 Rust 编写的原生远程桌面客户端。它把三种�
   ```
 
   另外需要支持 Vulkan 的显卡驱动。
-- macOS 使用 Xcode 命令行工具即可。
+- macOS 使用 Xcode 命令行工具即可；Windows 安装面向 MSVC 的 Rust 工具链即可。
 
 ### 构建与运行
 
@@ -66,12 +68,19 @@ cargo run --release      # 编译并启动
 cargo test               # 运行测试（含 UI 快照测试）
 ```
 
-### macOS 打包
+### 发布打包
 
-```sh
-packaging/macos/package.sh                  # 打包本机架构的 AirFrame.app
-packaging/macos/package.sh --arch universal # arm64 + x86_64 通用二进制
-```
+推送 `v*` 标签（或在 Actions 页手动触发工作流）即可构建并发布安装包到
+[GitHub Releases](https://github.com/yybit/airframe/releases/latest)：
+
+- **macOS** — 通用 `.dmg` / `.zip`（Apple Silicon + Intel）
+- **Windows** — x64 `.msi` 安装包 / `.zip`
+- **Linux** — x86_64 与 aarch64 的 `.deb` / `.rpm` / `.AppImage` / `.tar.gz`
+
+CI 会在每次推送时于 Linux 和 Windows 上运行 clippy 与测试。
+打包脚本也可以本地直接用：`packaging/macos/package.sh`、
+`packaging/linux/package.sh --arch x86_64`，Windows 安装包用
+`packaging/windows/airframe.wxs`（WiX）构建。
 
 ## 使用入门
 
@@ -106,13 +115,15 @@ crates/rdp           RDP 后端（基于 IronRDP，Tokio 运行时）
 crates/spice         SPICE 后端
 crates/ui            主题、图标、通用控件
 packaging/macos      macOS 打包脚本（.app / 通用二进制）
+packaging/linux      Linux 打包脚本（.deb / .rpm / .AppImage / .tar.gz）
+packaging/windows    Windows 安装包定义（WiX .wxs）
 ```
 
 架构上，UI 与各协议后端互不依赖，只通过 `airframe-core` 的会话契约（`SessionEvent` / `SessionCommand` 通道）通信——这也是三种后端可以互相替换、新增协议成本很低的原因。
 
 ## 项目状态
 
-v0.1.0，仍处于早期开发阶段，接口与配置格式都可能变化。Windows 平台尚未测试。
+v0.1.0，仍处于早期开发阶段，接口与配置格式都可能变化。
 
 ## 参与贡献
 
