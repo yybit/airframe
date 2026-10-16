@@ -8,7 +8,7 @@
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Rust](https://img.shields.io/badge/rust-1.95%2B-orange.svg)](https://www.rust-lang.org)
-[![Version](https://img.shields.io/badge/version-0.1.0-green.svg)]()
+[![Version](https://img.shields.io/badge/version-0.1.1-green.svg)]()
 [![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey.svg)](#building-from-source)
 
 [English](#) · [简体中文](README.zh-CN.md)
@@ -28,14 +28,14 @@ Prebuilt installers for macOS, Windows and Linux are published on [GitHub Releas
 ## Features
 
 - **Three protocols, one client** — VNC (RFB), RDP and SPICE; pick a protocol when creating a connection and the default port fills itself in
-- **Native GPU-rendered UI** — built on egui/eframe (wgpu); works out of the box on Linux (X11/Wayland), macOS and Windows
+- **Native GPU-rendered UI** — built on egui/eframe; works out of the box on Linux (X11/Wayland), macOS, Windows and Android
 - **Connection management** — groups, search, tabs (Ctrl+T new / Ctrl+W close / Ctrl+Tab switch), `vnc://` / `rdp://` / `spice://` links for sharing and importing
 - **Comfortable sessions** — overlay toolbar, fullscreen (F11), three zoom modes (fit / 1:1 / stretch), view-only mode
 - **Clipboard & text input** — clipboard text sync with the remote host; Ctrl+Shift+V opens a send-text window that bypasses key mapping entirely
 - **Keyboard-layout independent** — keys are translated from their *physical* position (X11 keysyms for VNC, PC/XT scancodes for RDP/SPICE), so a Dvorak or AZERTY layout on your machine never leaks into the remote session
 - **Dark & light themes + English / 中文** — the interface ships in English and Chinese
 - **Passwords stay off disk by default** — passwords live in memory for the current run only, unless you explicitly tick "remember password"
-- **Pure Rust** — `#![forbid(unsafe_code)]` across the workspace, with UI snapshot tests covering the main screens
+- **Pure Rust** — `#![forbid(unsafe_code)]` across the workspace, with UI snapshot tests covering the main screens. (The only exception is the ~10-line Android entry point, which must export the `android_main` symbol.)
 
 ## Supported protocols
 
@@ -60,6 +60,52 @@ Prebuilt installers for macOS, Windows and Linux are published on [GitHub Releas
 - On macOS, the Xcode command line tools are enough. On Windows, a Rust
   toolchain targeting MSVC is enough.
 
+### Android (experimental)
+
+The APK build additionally needs a JDK, the Android SDK **and** NDK, and
+[`cargo-apk`](https://crates.io/crates/cargo-apk) to drive them:
+
+```sh
+# Rust build targets
+rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android
+
+# cargo-apk drives the SDK/NDK
+cargo install cargo-apk
+
+# JDK — sdkmanager, keytool and apksigner are Java tools (Debian/Ubuntu example)
+sudo apt install openjdk-17-jdk-headless
+```
+
+Then install the SDK components `cargo-apk` packages with (the platform must
+match `target_sdk_version = 35` in `apps/airframe-android/Cargo.toml`):
+
+```sh
+export ANDROID_HOME="$HOME/Android/Sdk"
+export ANDROID_NDK_ROOT="$ANDROID_HOME/ndk/<version>"    # e.g. ndk/30.0.16248370
+
+sdkmanager --sdk_root="$ANDROID_HOME" --install \
+    "build-tools;36.0.0" "platforms;android-35" "ndk;30.0.16248370"
+```
+
+Two things worth knowing:
+
+- The RDP and SPICE backends compile C (rustls' crypto provider and LZ4), so
+  the NDK toolchain — not just the Rust targets — is required. NDK r23+ has no
+  plain `aarch64-linux-android-clang` wrapper, so point the `cc` crate at the
+  API-level one (`min_sdk_version = 23`):
+
+  ```sh
+  TC="$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin"
+  export CC_aarch64_linux_android="$TC/aarch64-linux-android23-clang"
+  export CXX_aarch64_linux_android="$TC/aarch64-linux-android23-clang++"
+  export AR_aarch64_linux_android="$TC/llvm-ar"
+  ```
+
+- Arch users: the AUR `android-platform` package installs its platform under a
+  name like `platforms/android-37.0`, which `cargo-apk` cannot parse. Symlink
+  the API level it expects (`ln -s android-37.0 …/platforms/android-35`) or
+  raise `target_sdk_version` to match.
+
 ### Build & run
 
 ```sh
@@ -69,6 +115,21 @@ cargo run --release      # build and launch
 cargo test               # run tests (includes UI snapshot tests)
 ```
 
+Android (installing needs a device or emulator and `adb`):
+
+```sh
+cargo apk build -p airframe-android --lib             # debug APK
+cargo apk build -p airframe-android --lib --release   # release APK
+cargo apk run -p airframe-android --lib               # build, install and launch
+```
+
+The APK lands in `target/<profile>/apk/airframe.apk`. Debug builds are signed
+with a debug key; release builds with `apps/airframe-android/release.keystore`
+— a *public* key committed to the repo so upgrades keep installing without
+anyone managing a secret. It proves the APK came from this repo; it is not a
+store-distribution identity, so generate a private keystore if you ever ship
+to an app store.
+
 ### Release packaging
 
 Pushing a `v*` tag (or running the workflow manually from the Actions tab)
@@ -77,6 +138,10 @@ builds and publishes installers to [GitHub Releases](https://github.com/yybit/ai
 - **macOS** — universal `.dmg` / `.zip` (Apple Silicon + Intel)
 - **Windows** — x64 `.msi` installer / `.zip`
 - **Linux** — x86_64 & aarch64 `.deb` / `.rpm` / `.AppImage` / `.tar.gz`
+
+Android support is **experimental** (the layout is still desktop-oriented) and
+is not part of the release workflow yet — build it from source with `cargo apk`
+(above).
 
 CI also runs clippy and the test suite on Linux and Windows for every push.
 The packaging scripts work locally too: `packaging/macos/package.sh`,
@@ -105,11 +170,13 @@ Saved connections and preferences are stored as plain JSON (passwords are writte
 
 - Linux / Unix: `~/.config/airframe/airframe.json` (respects `$XDG_CONFIG_HOME`)
 - macOS: `~/Library/Application Support/AirFrame/airframe.json`
+- Android: `/data/data/dev.airframe.app/files/airframe.json` — the app's private storage, removed when the app is uninstalled
 
 ## Project layout
 
 ```
-apps/airframe        Desktop app: UI, session management, input, shortcuts
+apps/airframe        App: UI, session management, input, shortcuts (lib + desktop binary)
+apps/airframe-android  Android entry point (`android_main`), packaged by cargo-apk
 crates/core          Protocol-agnostic core: connection model, session contract, on-disk store
 crates/vnc           VNC (RFB) backend
 crates/rdp           RDP backend (IronRDP on a Tokio runtime)
@@ -124,7 +191,7 @@ Architecturally, the UI and the protocol backends don't depend on each other —
 
 ## Status
 
-v0.1.0, early days — interfaces and on-disk formats may still change.
+v0.1.1, early days — interfaces and on-disk formats may still change.
 
 ## Contributing
 
