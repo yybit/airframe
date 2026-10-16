@@ -3,13 +3,21 @@ name: CI
 on:
   push:
     branches: [main, master]
-    paths-ignore:
-      - '**.md'
-      - 'website/**'
+    paths:
+      - 'apps/**'
+      - 'crates/**'
+      - 'packaging/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - '.github/workflows/**'
   pull_request:
-    paths-ignore:
-      - '**.md'
-      - 'website/**'
+    paths:
+      - 'apps/**'
+      - 'crates/**'
+      - 'packaging/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - '.github/workflows/**'
 
 permissions: {}
 
