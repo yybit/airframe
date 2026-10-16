@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AirFrame — VNC, RDP and SPICE desktops in one native window</title>
+  <meta name="description" content="AirFrame is a native remote-desktop client for VNC, RDP and SPICE. GPU-rendered, keyboard-layout independent, dark & light themes. Free and open source." />
+
+  <!-- Release maintenance: the direct-download buttons use
+       .../releases/latest/download/AirFrame-<version>-macos-<arch>.zip,
+       which resolves to the newest release with a matching asset name.
+       Bump the version in the button URLs when cutting a release,
+       or point them at .../releases/latest instead. -->
+  <meta property="og:title" content="AirFrame — VNC, RDP and SPICE desktops in one native window" />
+  <meta property="og:description" content="A native remote-desktop client built in Rust. Free and open source." />
+  <meta property="og:url" content="https://yybit.github.io/airframe/" />
+  <meta property="og:image" content="https://yybit.github.io/airframe/assets/app-dark.png" />
+  <link rel="icon" type="image/svg+xml" href="assets/logo.svg" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="container nav-inner">
+      <a class="brand" href="#">
+        <img src="assets/logo.svg" alt="" />
+        AirFrame
+      </a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#protocols">Protocols</a>
+        <a href="#download">Download</a>
+        <a class="lang" href="zh/">中文</a>
+        <a class="gh" href="https://github.com/yybit/airframe" target="_blank" rel="noopener">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+          GitHub
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="container">
+      <img class="logo" src="assets/logo.svg" alt="AirFrame logo" />
+      <h1>VNC, RDP and SPICE desktops<br />in <span class="grad">one native window</span>.</h1>
+      <p class="tagline">
+        A lightweight, GPU-rendered remote-desktop client written in Rust.
+        Manage every machine with unified connections, input and clipboard — no separate client per protocol.
+      </p>
+      <div class="badges">
+        <span class="badge">Version <b>0.1.0</b></span>
+        <span class="badge"><b>Apache-2.0</b> licensed</span>
+        <span class="badge">macOS · Linux</span>
+      </div>
+
+      <div class="download" id="download">
+        <a class="btn btn-primary" href="https://github.com/yybit/airframe/releases/latest/download/AirFrame-0.1.0-macos-aarch64.zip">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a1 1 0 0 1 1 1v9.59l3.3-3.3a1 1 0 1 1 1.4 1.42l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.42l3.3 3.3V4a1 1 0 0 1 1-1ZM4 19a1 1 0 0 1 1-1h14a1 1 0 1 1 0 2H5a1 1 0 0 1-1-1Z"/></svg>
+          <span>Download for macOS<small>Apple Silicon · macOS 13+</small></span>
+        </a>
+        <a class="btn btn-secondary" href="https://github.com/yybit/airframe/releases/latest/download/AirFrame-0.1.0-macos-x86_64.zip">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a1 1 0 0 1 1 1v9.59l3.3-3.3a1 1 0 1 1 1.4 1.42l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.42l3.3 3.3V4a1 1 0 0 1 1-1ZM4 19a1 1 0 0 1 1-1h14a1 1 0 1 1 0 2H5a1 1 0 0 1-1-1Z"/></svg>
+          <span>macOS (Intel)<small>x86_64 · macOS 13+</small></span>
+        </a>
+      </div>
+      <p class="download-note">
+        Linux: build from source with <code>cargo install --path apps/airframe</code> — see the <a href="https://github.com/yybit/airframe#building-from-source">README</a>.
+        Windows is not tested yet.
+      </p>
+
+      <div class="shot">
+        <div class="frame"><img src="assets/app-dark.png" alt="AirFrame main window with the connections sidebar" /></div>
+      </div>
+    </div>
+  </header>
+
+  <section id="features">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">Features</span>
+        <h2>Everything a remote session needs</h2>
+        <p>Built as one small, fast native app — not an Electron shell in a trench coat.</p>
+      </div>
+      <div class="grid">
+        <div class="card">
+          <div class="icon"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+          <h3>Three protocols, one client</h3>
+          <p>VNC, RDP and SPICE. Pick a protocol when creating a connection and the default port fills itself in.</p>
+        </div>
+        <div class="card">
+          <div class="icon"><svg viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z"/></svg></div>
+          <h3>Native &amp; GPU-rendered</h3>
+          <p>Built on egui/wgpu. Starts instantly, sips memory, and runs natively on X11, Wayland and macOS.</p>
+        </div>
+        <div class="card">
+          <div class="icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
+          <h3>Organized connections</h3>
+          <p>Groups, instant search, tabs (<code>Ctrl+T</code> new, <code>Ctrl+W</code> close), and <code>vnc://</code> links for sharing.</p>
+        </div>
+        <div class="card">
+          <div class="icon"><svg viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg></div>
+          <h3>Clipboard &amp; send text</h3>
+          <p>Clipboard text syncs with the remote host. <code>Ctrl+Shift+V</code> opens a send-text window that bypasses key mapping.</p>
+        </div>
+        <div class="card">
+          <div class="icon"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h1M10 10h1M14 10h1M18 10h1M7 14h10"/></svg></div>
+          <h3>Keyboard-layout independent</h3>
+          <p>Keys are translated from their physical position, so Dvorak or AZERTY on your machine never leaks into the session.</p>
+        </div>
+        <div class="card">
+          <div class="icon"><svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>
+          <h3>Passwords stay off disk</h3>
+          <p>Passwords live in memory for the current run only, unless you explicitly tick "remember password".</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="protocols" class="alt">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">Protocols</span>
+        <h2>Speaks your machines' language</h2>
+        <p>Each backend is a thin, dedicated adapter over a mature protocol library, behind one protocol-agnostic session contract.</p>
+      </div>
+      <div class="proto-grid">
+        <div class="proto">
+          <span class="chip vnc">VNC</span>
+          <h3>RFB / VNC</h3>
+          <div class="meta">Default port 5900 · <span class="scheme">vnc://</span></div>
+          <p>Raw, CopyRect, Hextile and ZRLE framebuffers, decoded off the UI thread.</p>
+        </div>
+        <div class="proto">
+          <span class="chip rdp">RDP</span>
+          <h3>Remote Desktop</h3>
+          <div class="meta">Default port 3389 · <span class="scheme">rdp://</span></div>
+          <p>Automatic security negotiation, compression, and a desktop that follows your viewport.</p>
+        </div>
+        <div class="proto">
+          <span class="chip spice">SPICE</span>
+          <h3>SPICE</h3>
+          <div class="meta">Default port 5930 · <span class="scheme">spice://</span></div>
+          <p>Display and input channels for virtual machines, driven straight from the session contract.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">Sessions</span>
+        <h2>Comfortable once you're connected</h2>
+        <p>An overlay toolbar, fullscreen, fit / 1:1 / stretch zoom, view-only mode — and the shortcuts you already expect.</p>
+      </div>
+      <div class="shortcuts">
+        <table>
+          <tr><td>New connection</td><td><kbd>Ctrl+T</kbd></td></tr>
+          <tr><td>Close current session</td><td><kbd>Ctrl+W</kbd></td></tr>
+          <tr><td>Switch between sessions</td><td><kbd>Ctrl+Tab</kbd></td></tr>
+          <tr><td>Open send-text window</td><td><kbd>Ctrl+Shift+V</kbd></td></tr>
+          <tr><td>Fullscreen</td><td><kbd>F11</kbd></td></tr>
+        </table>
+      </div>
+      <div class="gallery" style="margin-top: 44px;">
+        <figure><img src="assets/app-light.png" alt="Connection list in light theme" /><figcaption>Light theme</figcaption></figure>
+        <figure><img src="assets/editor.png" alt="Connection editor" /><figcaption>Connection editor</figcaption></figure>
+        <figure><img src="assets/send-text.png" alt="Send-text window" /><figcaption>Send text</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta alt">
+    <div class="container">
+      <h2>Ready when you are.</h2>
+      <p>Free and open source. Clone it, build it, or grab a release.</p>
+      <div class="download">
+        <a class="btn btn-primary" href="https://github.com/yybit/airframe/releases/latest">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a1 1 0 0 1 1 1v9.59l3.3-3.3a1 1 0 1 1 1.4 1.42l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.42l3.3 3.3V4a1 1 0 0 1 1-1ZM4 19a1 1 0 0 1 1-1h14a1 1 0 1 1 0 2H5a1 1 0 0 1-1-1Z"/></svg>
+          <span>Get AirFrame<small>macOS builds on GitHub Releases</small></span>
+        </a>
+        <a class="btn btn-secondary" href="https://github.com/yybit/airframe" target="_blank" rel="noopener">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+          <span>View source<small>Apache-2.0</small></span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container foot-inner">
+      <span class="brandline"><img src="assets/logo.svg" alt="" /> AirFrame</span>
+      <span>Built with Rust &amp; egui</span>
+      <div class="right">
+        <a href="https://github.com/yybit/airframe" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://github.com/yybit/airframe/releases" target="_blank" rel="noopener">Releases</a>
+        <a href="https://github.com/yybit/airframe#license" target="_blank" rel="noopener">License</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

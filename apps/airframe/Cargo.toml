@@ -1,0 +1,31 @@
+[package]
+name = "airframe"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+default-run = "airframe"
+description = "AirFrame: a native Rust remote desktop client for VNC, RDP and SPICE"
+
+[lints]
+workspace = true
+
+[dependencies]
+airframe-core = { workspace = true }
+airframe-vnc = { workspace = true }
+airframe-rdp = { workspace = true }
+airframe-spice = { workspace = true }
+airframe-ui = { workspace = true }
+egui = { workspace = true }
+eframe = { workspace = true }
+rfd = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+log = { workspace = true }
+env_logger = { workspace = true }
+# Screenshots and the macOS bundle icon; see session.rs and
+# examples/export_app_icon.rs.
+png = "0.17"
+
+[dev-dependencies]
+egui_kittest = { version = "0.36", features = ["wgpu", "snapshot", "x11"] }

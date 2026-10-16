@@ -1,0 +1,14 @@
+[package]
+name = "airframe-vnc"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+airframe-core = { workspace = true }
+vnc = { workspace = true }
+log = { workspace = true }
+crossbeam-channel = { workspace = true }

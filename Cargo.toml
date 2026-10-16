@@ -1,0 +1,66 @@
+[workspace]
+resolver = "3"
+members = ["crates/*", "apps/*"]
+default-members = ["crates/*", "apps/airframe"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "Apache-2.0"
+rust-version = "1.95"
+
+[workspace.dependencies]
+# internal
+airframe-core = { path = "crates/core" }
+airframe-vnc = { path = "crates/vnc" }
+airframe-rdp = { path = "crates/rdp" }
+airframe-spice = { path = "crates/spice" }
+airframe-ui = { path = "crates/ui" }
+
+# external
+egui = { version = "0.36", default-features = false }
+# eframe's own defaults: the wgpu renderer, winit's x11/wayland backends, accesskit and
+# egui's bundled fonts.
+eframe = { version = "0.36" }
+egui_extras = { version = "0.36", default-features = false }
+rfd = "0.17"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+uuid = { version = "1", features = ["v4", "serde"] }
+crossbeam-channel = "0.5"
+log = "0.4"
+env_logger = "0.11"
+
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "time", "sync", "io-util"] }
+
+vnc = "0.4"
+ironrdp = { version = "0.17", features = [
+    "client",
+    "session",
+    "connector",
+    "graphics",
+    "input",
+    "cliprdr",
+    "dvc",
+    "displaycontrol",
+    "rustls",
+] }
+spice-client = "0.2"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+dbg_macro = "warn"
+todo = "warn"
+
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 2
+
+[profile.release]
+lto = "thin"
+codegen-units = 1

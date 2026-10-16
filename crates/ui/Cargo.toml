@@ -1,0 +1,16 @@
+[package]
+name = "airframe-ui"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+airframe-core = { workspace = true }
+egui = { workspace = true }
+# Vector shapes only: the logo is a logo, and its lettering would be outlines.
+resvg = { version = "0.48.1", default-features = false }
+log = { workspace = true }
+serde = { workspace = true }

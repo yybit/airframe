@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- 背景圆角渐变 -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F172A"/>
+      <stop offset="100%" stop-color="#1E293B"/>
+    </linearGradient>
+    <!-- 图标主体光感渐变 -->
+    <linearGradient id="frameGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="50%" stop-color="#818CF8"/>
+      <stop offset="100%" stop-color="#C084FC"/>
+    </linearGradient>
+  </defs>
+
+  <!-- App 图标背景基底 -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)"/>
+
+  <!-- Airframe 主体：外框 + 内部空间 -->
+  <g transform="translate(96, 96)" stroke="url(#frameGrad)" stroke-width="28" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- 外层透视帧 (Frame) -->
+    <rect x="24" y="56" width="272" height="192" rx="24" opacity="0.9"/>
+    <!-- 穿透画面的流线 (Air / Stream) -->
+    <path d="M 80 240 L 176 80 L 296 200" stroke-width="32"/>
+    <!-- 节点指示器 -->
+    <circle cx="296" cy="200" r="12" fill="#38BDF8" stroke="none"/>
+  </g>
+</svg>
