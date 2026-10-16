@@ -1,6 +1,6 @@
 //! The application shell: saved connections, open tabs and the chrome around them.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
@@ -75,6 +75,9 @@ pub struct App {
     pub confirm_delete: Option<Uuid>,
     /// Open when the "send text to the remote" dialog is on screen.
     pub send_text: Option<String>,
+    /// Passwords typed without "remember on this device": kept for this run
+    /// only, never written to the store. Keyed by connection id.
+    run_passwords: HashMap<Uuid, String>,
     pub collapsed_groups: BTreeSet<String>,
     pub actions: Vec<Action>,
     toast: Option<Toast>,
@@ -94,6 +97,7 @@ impl App {
             settings_open: false,
             confirm_delete: None,
             send_text: None,
+            run_passwords: HashMap::new(),
             collapsed_groups: BTreeSet::new(),
             actions: Vec::new(),
             toast: None,
@@ -161,17 +165,33 @@ impl App {
 
     /// Open a session for `connection`, reusing its tab when one already exists.
     fn open(&mut self, mut connection: Connection) {
+        let conn_id = connection.id;
+        // A password typed without "remember on this device" lives for this
+        // run only; reattach it so connecting from the sidebar works too.
+        if connection.password.is_none()
+            && let Some(password) = self.run_passwords.get(&conn_id)
+        {
+            connection.password = Some(password.clone());
+        }
         if let Some(index) = self.tabs.iter().position(|tab| {
-            tab.session.connection.id == connection.id
+            tab.session.connection.id == conn_id
         }) {
+            let tab = &mut self.tabs[index];
+            // Refresh the session's config (e.g. a newly typed password). A
+            // failed session restarts so saving a corrected password reconnects.
+            let failed = tab.session.state == State::Failed;
+            tab.session.connection = connection;
+            if failed {
+                tab.session.restart();
+            }
             self.active = index;
-            self.selection = Some(connection.id);
+            self.selection = Some(conn_id);
             return;
         }
         if self.store.data.settings.view_only_default {
             connection.view_only = true;
         }
-        self.selection = Some(connection.id);
+        self.selection = Some(conn_id);
         let id = self.next_tab;
         self.next_tab += 1;
         let lang = self.lang();
@@ -204,6 +224,16 @@ impl App {
         }
         let name = connection.display_name().to_owned();
         self.selection = Some(connection.id);
+        // The store scrubs un-remembered passwords, so park one for this run
+        // when the user typed it without "remember on this device".
+        match connection.password.as_deref() {
+            Some(password) if !connection.remember_password => {
+                self.run_passwords.insert(connection.id, password.to_owned());
+            }
+            _ => {
+                self.run_passwords.remove(&connection.id);
+            }
+        }
         self.store.upsert(connection);
         self.save();
         let text = format!("{} \u{201c}{name}\u{201d}", lang.pick("Saved", "已保存"));
@@ -587,6 +617,7 @@ impl App {
 
         if delete {
             self.store.remove(id);
+            self.run_passwords.remove(&id);
             if self.selection == Some(id) {
                 self.selection = None;
             }
