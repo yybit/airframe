@@ -251,13 +251,27 @@ fn scroll_input(ui: &Ui, response: &egui::Response, session: &mut Session) {
 }
 
 fn key_input(ui: &Ui, response: &egui::Response, session: &mut Session) {
-    if session.view_only || ui.ctx().egui_wants_keyboard_input() {
+    if session.view_only || ui.ctx().text_edit_focused() {
         return;
     }
 
-    // Tab belongs to the remote session, not to egui's focus traversal.
+    // Tab, Escape and the arrow keys belong to the remote session, not to
+    // egui's focus traversal. Only the focused widget can hold them off, so a
+    // live view keeps the focus itself: otherwise the first Tab moves egui's
+    // focus to another widget, and every keystroke after that leaves with it.
+    if session.state == State::Live && !response.has_focus() {
+        response.request_focus();
+    }
     ui.ctx().memory_mut(|mem| {
-        mem.set_focus_lock_filter(response.id, EventFilter { tab: true, ..Default::default() });
+        mem.set_focus_lock_filter(
+            response.id,
+            EventFilter {
+                tab: true,
+                horizontal_arrows: true,
+                vertical_arrows: true,
+                escape: true,
+            },
+        );
     });
 
     // Modifier keys never arrive as key events, so their transitions are
@@ -272,8 +286,8 @@ fn key_input(ui: &Ui, response: &egui::Response, session: &mut Session) {
 
     for event in ui.input(|i| i.events.clone()) {
         match event {
-            egui::Event::Key { key, physical_key, pressed, .. } => {
-                if let Some(code) = keymap::lookup(physical_key.unwrap_or(key)) {
+            egui::Event::Key { key, physical_key, pressed, modifiers, .. } => {
+                if let Some(code) = keymap::lookup(physical_key.unwrap_or(key), modifiers.shift) {
                     session.send(SessionCommand::Key(code.input(pressed)));
                 }
             }

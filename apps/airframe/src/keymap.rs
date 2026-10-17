@@ -66,7 +66,12 @@ pub fn modifier_state(modifiers: &Modifiers) -> [bool; 4] {
 }
 
 /// The key code for an egui physical key, if the protocols can express it.
-pub fn lookup(key: Key) -> Option<KeyCode> {
+///
+/// `shift` picks the character the key carries with shift held. A keysym names
+/// a character rather than a key, so the shifted form has to be sent as its own
+/// keysym, the way [`character`] sends the character itself: a server that maps
+/// keysyms straight to characters would otherwise type `a` for `A`.
+pub fn lookup(key: Key, shift: bool) -> Option<KeyCode> {
     let (keysym, scancode, extended) = match key {
         Key::Escape => (0xFF1B, 0x01, false),
         Key::Tab => (0xFF09, 0x0F, false),
@@ -162,7 +167,21 @@ pub fn lookup(key: Key) -> Option<KeyCode> {
         Key::F12 => (0xFFC9, 0x58, false),
         _ => return None,
     };
+    let keysym = if shift { shifted(keysym) } else { keysym };
     Some(KeyCode { keysym, scancode, extended })
+}
+
+/// The keysym the same physical key produces with shift held: the uppercase of
+/// a letter, or the second character of a printed pair. A key with no shifted
+/// form keeps the keysym it already had.
+fn shifted(keysym: u32) -> u32 {
+    if (0x61..=0x7A).contains(&keysym) {
+        return keysym - 0x20; // 'a'..'z' -> 'A'..'Z'
+    }
+    PRINTABLE
+        .iter()
+        .find_map(|&(_, plain, shifted)| (plain as u32 == keysym).then_some(shifted as u32))
+        .unwrap_or(keysym)
 }
 
 impl KeyCode {
@@ -237,5 +256,20 @@ mod tests {
         assert_eq!(character('\n').expect("newline").0.scancode, 0x1C);
         assert_eq!(character('\t').expect("tab").0.scancode, 0x0F);
         assert!(character('中').is_none(), "a remote session cannot be sent a CJK character");
+    }
+
+    /// A typed key has to name the character shift makes of it, the way
+    /// [`character`] does for pasted text.
+    #[test]
+    fn shifted_keys_send_the_character_they_type() {
+        assert_eq!(lookup(Key::A, false).expect("a letter").keysym, 'a' as u32);
+        assert_eq!(lookup(Key::A, true).expect("a letter").keysym, 'A' as u32);
+
+        let bang = lookup(Key::Num1, true).expect("a digit");
+        assert_eq!((bang.scancode, bang.keysym), (0x02, '!' as u32));
+
+        // Keys with no shifted form keep the keysym they already had.
+        assert_eq!(lookup(Key::Tab, true).expect("tab").keysym, 0xFF09);
+        assert_eq!(lookup(Key::ArrowUp, true).expect("an arrow").keysym, 0xFF52);
     }
 }

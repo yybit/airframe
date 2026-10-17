@@ -297,7 +297,9 @@ impl App {
         {
             return;
         }
-        let typing = ctx.egui_wants_keyboard_input();
+        // A live view holds the keyboard focus so the remote gets Tab and the
+        // arrows, so only a text field counts as "the user is typing".
+        let typing = ctx.text_edit_focused();
         let shift_ctrl = Modifiers { shift: true, ..Modifiers::CTRL };
 
         let mut new = false;
