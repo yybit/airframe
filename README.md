@@ -29,9 +29,10 @@ Prebuilt installers for macOS, Windows and Linux are published on [GitHub Releas
 
 - **Three protocols, one client** — VNC (RFB), RDP and SPICE; pick a protocol when creating a connection and the default port fills itself in
 - **Native GPU-rendered UI** — built on egui/eframe; works out of the box on Linux (X11/Wayland), macOS, Windows and Android
-- **Connection management** — groups, search, tabs (Cmd+T new / Cmd+W close on macOS, Ctrl elsewhere; Ctrl+Tab switches), `vnc://` / `rdp://` / `spice://` links for sharing and importing
-- **Comfortable sessions** — overlay toolbar, fullscreen (F11), three zoom modes (fit / 1:1 / stretch), view-only mode
-- **Clipboard & text input** — clipboard text sync with the remote host; Cmd+Shift+V (macOS) or Ctrl+Shift+V opens a send-text window that bypasses key mapping entirely
+- **Connection management** — groups, search, tabs, `vnc://` / `rdp://` / `spice://` links for sharing and importing
+- **Comfortable sessions** — overlay toolbar, fullscreen, three zoom modes (fit / 1:1 / stretch), view-only mode
+- **Clipboard & text input** — clipboard text sync with the remote host, plus a send-text window that bypasses key mapping entirely
+- **No global shortcuts** — every key goes to the session while one is focused, so `Ctrl+W`, `Ctrl+Q`, `F11` and Tab reach the remote untouched
 - **Keyboard-layout independent** — keys are translated from their *physical* position (X11 keysyms for VNC, PC/XT scancodes for RDP/SPICE), so a Dvorak or AZERTY layout on your machine never leaks into the remote session
 - **Dark & light themes + English / 中文** — the interface ships in English and Chinese
 - **Passwords stay off disk by default** — passwords live in memory for the current run only, unless you explicitly tick "remember password"
@@ -186,19 +187,13 @@ The packaging scripts work locally too: `make mac` (above),
 2. Pick a protocol (VNC / RDP / SPICE), fill in the host and port (default pre-filled), username and password
 3. Save, double-click the entry in the sidebar to connect; use the overlay toolbar for fullscreen and zoom while in a session
 
-**Keyboard shortcuts**
+**Keyboard**
 
-The app's own chords use the platform's command key — **Cmd** on macOS,
-**Ctrl** on Linux and Windows — so on a Mac Ctrl stays with the remote, whose
-terminals need it (`Ctrl+W` deletes a word there, and so on).
-
-| Shortcut | Action |
-|----------|--------|
-| `Cmd+T` (macOS) / `Ctrl+T` | New connection |
-| `Cmd+W` (macOS) / `Ctrl+W` | Close current session |
-| `Ctrl+Tab` | Switch between sessions |
-| `Cmd+Shift+V` (macOS) / `Ctrl+Shift+V` | Open the send-text window |
-| `F11` | Fullscreen |
+The app claims no global shortcuts: while a session is focused the keyboard
+belongs to it, so `Ctrl+W`, `Ctrl+Q`, `F11` and Tab reach the remote untouched.
+Everything the app itself does is on the overlay toolbar and the sidebar — new
+connection, close, reconnect, send text, screenshot, fullscreen and zoom. Closing
+the window quits.
 
 ## Where data lives
 

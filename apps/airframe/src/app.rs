@@ -7,9 +7,8 @@ use std::time::{Duration, Instant};
 use airframe_core::{Connection, Lang, Store, StoreError, Theme};
 use airframe_ui::{Icon, State, palette, theme as ui_theme};
 use egui::{
-    Align, Align2, Area, CentralPanel, Color32, Context, CornerRadius, Frame, Id, Key,
-    KeyboardShortcut, Layout, Margin, Modifiers, Order, Panel, RichText, Sense, Stroke, Ui, Vec2,
-    ViewportCommand, vec2,
+    Align, Align2, Area, CentralPanel, Color32, Context, CornerRadius, Frame, Id, Layout, Margin,
+    Order, Panel, RichText, Sense, Stroke, Ui, Vec2, ViewportCommand, vec2,
 };
 use uuid::Uuid;
 
@@ -22,12 +21,12 @@ const FRAME_INTERVAL: Duration = Duration::from_millis(16);
 /// How long a toast stays on screen.
 const TOAST_LIFETIME: Duration = Duration::from_millis(2800);
 
-/// Spell one of the app's shortcuts the way this platform's users write it:
-/// `Cmd+W` on macOS, `Ctrl+W` everywhere else.
+/// Spell a chord the way this platform's users write it: `Cmd+V` on macOS,
+/// `Ctrl+V` everywhere else.
 ///
-/// The chords themselves follow the command key (see `App::shortcuts`) so
-/// that on a Mac Ctrl stays with the remote.
-pub fn shortcut(keys: &str) -> String {
+/// The paste hint in the send-text dialog is about the platform's own paste
+/// chord, which is what egui's text fields listen for.
+fn shortcut(keys: &str) -> String {
     if cfg!(target_os = "macos") {
         format!("Cmd+{keys}")
     } else {
@@ -53,7 +52,6 @@ pub enum Action {
     SendText,
     Settings,
     Fullscreen,
-    Quit,
 }
 
 /// One open session.
@@ -304,84 +302,6 @@ impl App {
         }
     }
 
-    fn shortcuts(&mut self, ctx: &Context) {
-        if self.editor.is_some()
-            || self.settings_open
-            || self.confirm_delete.is_some()
-            || self.send_text.is_some()
-            || self.password_prompt.is_some()
-        {
-            return;
-        }
-        // A live view holds the keyboard focus so the remote gets Tab and the
-        // arrows, so only a text field counts as "the user is typing".
-        let typing = ctx.text_edit_focused();
-        // The app's own chords use the command key — Cmd on macOS, Ctrl
-        // elsewhere — so on a Mac Ctrl stays with the remote, whose terminals
-        // need Ctrl+W, Ctrl+Q and the rest of the control characters.
-        // Switching sessions keeps Ctrl+Tab, because macOS owns Cmd+Tab.
-        let command = Modifiers::COMMAND;
-        let shift_command = Modifiers { shift: true, ..Modifiers::COMMAND };
-        let shift_ctrl = Modifiers { shift: true, ..Modifiers::CTRL };
-
-        let mut new = false;
-        let mut close = false;
-        let mut next = false;
-        let mut previous = false;
-        let mut settings = false;
-        let mut fullscreen = false;
-        let mut quit = false;
-        let mut send_text = false;
-        ctx.input_mut(|input| {
-            if !typing {
-                new = input.consume_shortcut(&KeyboardShortcut::new(command, Key::T));
-                close = input.consume_shortcut(&KeyboardShortcut::new(command, Key::W));
-                send_text = input.consume_shortcut(&KeyboardShortcut::new(shift_command, Key::V));
-                next = input.consume_shortcut(&KeyboardShortcut::new(shift_ctrl, Key::Tab));
-                // A pattern ignores an extra Shift, so the plain chord below
-                // would match this one too; take the shifted chord first.
-                previous =
-                    input.consume_shortcut(&KeyboardShortcut::new(Modifiers::CTRL, Key::Tab));
-                settings =
-                    input.consume_shortcut(&KeyboardShortcut::new(command, Key::Comma));
-                quit = input.consume_shortcut(&KeyboardShortcut::new(command, Key::Q));
-            }
-            fullscreen = input.consume_shortcut(&KeyboardShortcut::new(Modifiers::NONE, Key::F11));
-        });
-
-        if quit {
-            self.actions.push(Action::Quit);
-        }
-        if new {
-            self.actions.push(Action::New);
-        }
-        if close && !self.tabs.is_empty() {
-            self.actions.push(Action::Close(self.active));
-        }
-        if send_text && !self.tabs.is_empty() {
-            self.actions.push(Action::SendText);
-        }
-        if settings {
-            self.settings_open = true;
-        }
-        if fullscreen {
-            self.actions.push(Action::Fullscreen);
-        }
-        if !self.tabs.is_empty() {
-            if next {
-                self.active = (self.active + 1) % self.tabs.len();
-            }
-            if previous {
-                self.active = (self.active + self.tabs.len() - 1) % self.tabs.len();
-            }
-            // The sidebar is what shows the sessions, so its highlight follows
-            // the one the workspace is on.
-            if (next || previous) && let Some(tab) = self.tabs.get(self.active) {
-                self.selection = Some(tab.session.connection.id);
-            }
-        }
-    }
-
     fn apply_actions(&mut self, ctx: &Context) {
         let actions = std::mem::take(&mut self.actions);
         if actions.is_empty() {
@@ -420,7 +340,6 @@ impl App {
                     let full = ctx.input(|i| i.viewport().fullscreen.unwrap_or(false));
                     ctx.send_viewport_cmd(ViewportCommand::Fullscreen(!full));
                 }
-                Action::Quit => ctx.send_viewport_cmd(ViewportCommand::Close),
             }
         }
         ctx.request_repaint();
@@ -439,11 +358,11 @@ impl App {
             ui.label(RichText::new("VNC \u{b7} RDP \u{b7} SPICE").size(11.0).color(p.text_faint));
 
             ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-                let hint = format!("{} ({})", lang.pick("Settings", "设置"), shortcut(","));
-                if airframe_ui::icon_button(ui, Icon::Gear, 26.0, p.text_dim, &hint).clicked() {
+                let hint = lang.pick("Settings", "设置");
+                if airframe_ui::icon_button(ui, Icon::Gear, 26.0, p.text_dim, hint).clicked() {
                     self.actions.push(Action::Settings);
                 }
-                let hint = lang.pick("Fullscreen (F11)", "全屏 (F11)");
+                let hint = lang.pick("Fullscreen", "全屏");
                 if airframe_ui::icon_button(ui, Icon::Expand, 26.0, p.text_dim, hint).clicked() {
                     self.actions.push(Action::Fullscreen);
                 }
@@ -1058,7 +977,6 @@ impl App {
             self.applied_theme = Some(theme);
         }
 
-        self.shortcuts(&ctx);
         self.pump(&ctx);
 
         let p = palette(theme);

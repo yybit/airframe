@@ -165,13 +165,6 @@ section.alt { background: var(--bg-soft); border-top: 1px solid var(--border-sof
 .proto p { color: var(--text-dim); font-size: 14px; }
 .proto .scheme { font-family: var(--mono); font-size: 12.5px; color: var(--text-dim); background: var(--bg); border: 1px solid var(--border-soft); border-radius: 6px; padding: 2px 8px; }
 
-/* shortcuts */
-
-.shortcuts { max-width: 560px; margin: 0 auto; }
-.shortcuts table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
-.shortcuts td { padding: 10px 4px; border-bottom: 1px solid var(--border-soft); color: var(--text-dim); }
-.shortcuts tr:last-child td { border-bottom: none; }
-.shortcuts td:last-child { text-align: right; }
 kbd {
   font-family: var(--mono); font-size: 12.5px; color: var(--text);
   background: var(--panel-raised); border: 1px solid var(--border); border-bottom-width: 2px;

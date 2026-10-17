@@ -9,7 +9,7 @@ use egui::{
     Order, Painter, Pos2, Rect, RichText, Sense, Shape, Stroke, Ui, Vec2, pos2, vec2,
 };
 
-use crate::app::{Action, Tab, shortcut};
+use crate::app::{Action, Tab};
 use crate::keymap;
 use crate::session::{Session, Zoom};
 
@@ -170,21 +170,6 @@ pub fn onboarding(ui: &mut Ui, theme: Theme, lang: Lang) -> Vec<Action> {
         if ui.add(new).clicked() {
             actions.push(Action::New);
         }
-
-        ui.add_space(30.0);
-        let hint = match lang {
-            Lang::En => format!(
-                "{} new   \u{b7}   {} close   \u{b7}   Ctrl+Tab switch",
-                shortcut("T"),
-                shortcut("W")
-            ),
-            Lang::Zh => format!(
-                "{} 新建   \u{b7}   {} 关闭会话   \u{b7}   Ctrl+Tab 切换",
-                shortcut("T"),
-                shortcut("W")
-            ),
-        };
-        ui.label(RichText::new(hint).size(11.0).color(p.text_faint));
     });
 
     actions
@@ -425,18 +410,12 @@ fn toolbar(
                     {
                         actions.push(Action::Screenshot(index));
                     }
-                    let hint = match lang {
-                        Lang::En => format!(
-                            "Send text to the remote ({}): typed in one key at a time, \
-                             for consoles with no clipboard",
-                            shortcut("Shift+V")
-                        ),
-                        Lang::Zh => format!(
-                            "向远端发送文本（{}）：逐键输入，适用于没有剪贴板的控制台",
-                            shortcut("Shift+V")
-                        ),
-                    };
-                    if airframe_ui::icon_button(ui, Icon::Keyboard, 24.0, p.text_dim, &hint)
+                    let hint = lang.pick(
+                        "Send text to the remote: typed in one key at a time, for \
+                         consoles with no clipboard",
+                        "向远端发送文本：逐键输入，适用于没有剪贴板的控制台",
+                    );
+                    if airframe_ui::icon_button(ui, Icon::Keyboard, 24.0, p.text_dim, hint)
                         .clicked()
                     {
                         actions.push(Action::SendText);
