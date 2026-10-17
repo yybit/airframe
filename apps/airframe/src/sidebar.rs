@@ -11,7 +11,7 @@ use egui::{
 };
 use uuid::Uuid;
 
-use crate::app::{Action, App};
+use crate::app::{Action, App, shortcut};
 
 /// Height of one connection row.
 const ROW: f32 = 46.0;
@@ -43,8 +43,8 @@ fn header(ui: &mut Ui, app: &App, p: &Palette, pending: &mut Vec<Action>) {
                 .color(p.text_faint),
         );
         ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-            let hint = lang.pick("New connection (Ctrl+T)", "新建连接 (Ctrl+T)");
-            if airframe_ui::icon_button(ui, Icon::Plus, 24.0, p.text_dim, hint).clicked() {
+            let hint = format!("{} ({})", lang.pick("New connection", "新建连接"), shortcut("T"));
+            if airframe_ui::icon_button(ui, Icon::Plus, 24.0, p.text_dim, &hint).clicked() {
                 pending.push(Action::New);
             }
         });

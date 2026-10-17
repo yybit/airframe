@@ -29,9 +29,9 @@ macOS、Windows 和 Linux 的预构建安装包发布在 [GitHub Releases](https
 
 - **三种协议，一个客户端** — VNC (RFB)、RDP、SPICE；新建连接时选协议，端口自动填好默认值
 - **原生 GPU 界面** — 基于 egui/eframe，Linux (X11/Wayland)、macOS、Windows 和 Android 上开箱即用
-- **连接管理** — 分组、搜索、标签页（Ctrl+T 新建 / Ctrl+W 关闭 / Ctrl+Tab 切换）、`vnc://` / `rdp://` / `spice://` 链接导入分享
+- **连接管理** — 分组、搜索、标签页（macOS 用 Cmd+T 新建 / Cmd+W 关闭，其他平台用 Ctrl；Ctrl+Tab 切换）、`vnc://` / `rdp://` / `spice://` 链接导入分享
 - **舒适的远程会话** — 悬浮工具栏、全屏 (F11)、三种缩放（适应窗口 / 1:1 / 拉伸）、只读模式
-- **剪贴板与文本输入** — 与远程主机同步剪贴板文本；Ctrl+Shift+V 打开发送文本窗口，绕过键盘映射直接输入
+- **剪贴板与文本输入** — 与远程主机同步剪贴板文本；macOS 用 Cmd+Shift+V、其他平台用 Ctrl+Shift+V 打开发送文本窗口，绕过键盘映射直接输入
 - **键盘布局无关** — 按物理键位置转换按键（VNC 用 X11 keysym，RDP/SPICE 用 PC/XT scancode），本机的 Dvorak、AZERTY 等布局不会泄漏进远程会话
 - **明暗主题 + 中英双语** — 界面内置中文与英文，主题支持深色 / 浅色
 - **密码默认不落盘** — 密码只保存在内存中，除非显式勾选“记住密码”
@@ -114,6 +114,15 @@ cargo run --release      # 编译并启动
 cargo test               # 运行测试（含 UI 快照测试）
 ```
 
+`make` 封装了常用命令，直接运行 `make` 会列出全部目标：
+
+```sh
+make run                 # 编译并启动
+make test                # 运行测试
+make lint                # clippy，与 CI 完全一致
+make mac                 # 打包 macOS 应用（见下文）
+```
+
 Android（安装需要已连接的设备或模拟器，以及 `adb`）：
 
 ```sh
@@ -128,6 +137,29 @@ release 构建用仓库里提交的 `apps/airframe-android/release.keystore` —
 管理机密的负担。它只证明"APK 来自本仓库"，不是应用商店的分发身份；若要上架
 商店，请自行生成私有密钥库并不要提交。
 
+### macOS 打包
+
+在装有 Xcode 命令行工具的 Mac 上：
+
+```sh
+make mac                 # 生成当前架构的 .app 和 .zip
+make mac-universal       # 生成同时包含 Apple Silicon 与 Intel 切片的包
+```
+
+`make mac` 调用 `packaging/macos/package.sh`：构建 `AirFrame.app`（Info.plist、
+图标由 `crates/ui/src/app_icon.rs` 烘焙、ad-hoc 签名），并压缩为
+`dist/AirFrame-<version>-macos-<arch>.zip`。两个架构也可以在 Linux 上交叉
+构建，只要有一份 macOS SDK：
+
+```sh
+SDKROOT=~/sdk/MacOSX15.5.sdk make mac-cross-x86_64
+```
+
+交叉构建需要什么、为什么需要，见
+[`packaging/macos/README.md`](packaging/macos/README.md)。无论哪种方式，产物
+都只有 ad-hoc 签名，因此下载来的包会被 Gatekeeper 隔离：解压后首次启动前执行
+一次 `xattr -dr com.apple.quarantine AirFrame.app`。
+
 ### 发布打包
 
 推送 `v*` 标签（或在 Actions 页手动触发工作流）即可构建并发布安装包到
@@ -141,7 +173,7 @@ Android 支持目前是**实验性**的（页面布局仍按桌面设计），�
 请用上文的 `cargo apk` 从源码构建。
 
 CI 会在每次推送时于 Linux 和 Windows 上运行 clippy 与测试。
-打包脚本也可以本地直接用：`packaging/macos/package.sh`、
+打包脚本也可以本地直接用：`make mac`（见上文）、
 `packaging/linux/package.sh --arch x86_64`，Windows 安装包用
 `packaging/windows/airframe.wxs`（WiX）构建。
 
@@ -153,12 +185,16 @@ CI 会在每次推送时于 Linux 和 Windows 上运行 clippy 与测试。
 
 **快捷键**
 
+应用自身的快捷键使用平台命令键 —— macOS 上是 **Cmd**，Linux 与 Windows 上是
+**Ctrl** —— 这样在 Mac 上 Ctrl 就能留给远程，终端里正需要它（`Ctrl+W` 在终端
+里是删除前一个单词，等等）。
+
 | 快捷键 | 作用 |
 |--------|------|
-| `Ctrl+T` | 新建连接 |
-| `Ctrl+W` | 关闭当前会话 |
+| `Cmd+T`（macOS）/ `Ctrl+T` | 新建连接 |
+| `Cmd+W`（macOS）/ `Ctrl+W` | 关闭当前会话 |
 | `Ctrl+Tab` | 在会话之间切换 |
-| `Ctrl+Shift+V` | 打开发送文本窗口 |
+| `Cmd+Shift+V`（macOS）/ `Ctrl+Shift+V` | 打开发送文本窗口 |
 | `F11` | 全屏 |
 
 ## 数据存放位置

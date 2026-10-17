@@ -22,6 +22,19 @@ const FRAME_INTERVAL: Duration = Duration::from_millis(16);
 /// How long a toast stays on screen.
 const TOAST_LIFETIME: Duration = Duration::from_millis(2800);
 
+/// Spell one of the app's shortcuts the way this platform's users write it:
+/// `Cmd+W` on macOS, `Ctrl+W` everywhere else.
+///
+/// The chords themselves follow the command key (see `App::shortcuts`) so
+/// that on a Mac Ctrl stays with the remote.
+pub fn shortcut(keys: &str) -> String {
+    if cfg!(target_os = "macos") {
+        format!("Cmd+{keys}")
+    } else {
+        format!("Ctrl+{keys}")
+    }
+}
+
 /// Something the chrome asked the app to do.
 ///
 /// Widgets push these instead of mutating shared state directly, so a frame's
@@ -303,6 +316,12 @@ impl App {
         // A live view holds the keyboard focus so the remote gets Tab and the
         // arrows, so only a text field counts as "the user is typing".
         let typing = ctx.text_edit_focused();
+        // The app's own chords use the command key — Cmd on macOS, Ctrl
+        // elsewhere — so on a Mac Ctrl stays with the remote, whose terminals
+        // need Ctrl+W, Ctrl+Q and the rest of the control characters.
+        // Switching sessions keeps Ctrl+Tab, because macOS owns Cmd+Tab.
+        let command = Modifiers::COMMAND;
+        let shift_command = Modifiers { shift: true, ..Modifiers::COMMAND };
         let shift_ctrl = Modifiers { shift: true, ..Modifiers::CTRL };
 
         let mut new = false;
@@ -315,17 +334,17 @@ impl App {
         let mut send_text = false;
         ctx.input_mut(|input| {
             if !typing {
-                new = input.consume_shortcut(&KeyboardShortcut::new(Modifiers::CTRL, Key::T));
-                close = input.consume_shortcut(&KeyboardShortcut::new(Modifiers::CTRL, Key::W));
-                send_text = input.consume_shortcut(&KeyboardShortcut::new(shift_ctrl, Key::V));
+                new = input.consume_shortcut(&KeyboardShortcut::new(command, Key::T));
+                close = input.consume_shortcut(&KeyboardShortcut::new(command, Key::W));
+                send_text = input.consume_shortcut(&KeyboardShortcut::new(shift_command, Key::V));
                 next = input.consume_shortcut(&KeyboardShortcut::new(shift_ctrl, Key::Tab));
-                // Matching is exact, so the plain chord is still free after
-                // the shifted one has been taken.
+                // A pattern ignores an extra Shift, so the plain chord below
+                // would match this one too; take the shifted chord first.
                 previous =
                     input.consume_shortcut(&KeyboardShortcut::new(Modifiers::CTRL, Key::Tab));
                 settings =
-                    input.consume_shortcut(&KeyboardShortcut::new(Modifiers::CTRL, Key::Comma));
-                quit = input.consume_shortcut(&KeyboardShortcut::new(Modifiers::CTRL, Key::Q));
+                    input.consume_shortcut(&KeyboardShortcut::new(command, Key::Comma));
+                quit = input.consume_shortcut(&KeyboardShortcut::new(command, Key::Q));
             }
             fullscreen = input.consume_shortcut(&KeyboardShortcut::new(Modifiers::NONE, Key::F11));
         });
@@ -420,8 +439,8 @@ impl App {
             ui.label(RichText::new("VNC \u{b7} RDP \u{b7} SPICE").size(11.0).color(p.text_faint));
 
             ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-                let hint = lang.pick("Settings (Ctrl+,)", "设置 (Ctrl+,)");
-                if airframe_ui::icon_button(ui, Icon::Gear, 26.0, p.text_dim, hint).clicked() {
+                let hint = format!("{} ({})", lang.pick("Settings", "设置"), shortcut(","));
+                if airframe_ui::icon_button(ui, Icon::Gear, 26.0, p.text_dim, &hint).clicked() {
                     self.actions.push(Action::Settings);
                 }
                 let hint = lang.pick("Fullscreen (F11)", "全屏 (F11)");
@@ -698,7 +717,10 @@ impl App {
                         .desired_rows(6)
                         .desired_width(f32::INFINITY)
                         .font(egui::TextStyle::Monospace)
-                        .hint_text(lang.pick("Ctrl+V pastes here", "在此按 Ctrl+V 粘贴")),
+                        .hint_text(match lang {
+                            Lang::En => format!("{} pastes here", shortcut("V")),
+                            Lang::Zh => format!("在此按 {} 粘贴", shortcut("V")),
+                        }),
                 );
                 if buffer.is_empty() {
                     // An empty box is all there is to do here, so it holds the

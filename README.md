@@ -29,9 +29,9 @@ Prebuilt installers for macOS, Windows and Linux are published on [GitHub Releas
 
 - **Three protocols, one client** — VNC (RFB), RDP and SPICE; pick a protocol when creating a connection and the default port fills itself in
 - **Native GPU-rendered UI** — built on egui/eframe; works out of the box on Linux (X11/Wayland), macOS, Windows and Android
-- **Connection management** — groups, search, tabs (Ctrl+T new / Ctrl+W close / Ctrl+Tab switch), `vnc://` / `rdp://` / `spice://` links for sharing and importing
+- **Connection management** — groups, search, tabs (Cmd+T new / Cmd+W close on macOS, Ctrl elsewhere; Ctrl+Tab switches), `vnc://` / `rdp://` / `spice://` links for sharing and importing
 - **Comfortable sessions** — overlay toolbar, fullscreen (F11), three zoom modes (fit / 1:1 / stretch), view-only mode
-- **Clipboard & text input** — clipboard text sync with the remote host; Ctrl+Shift+V opens a send-text window that bypasses key mapping entirely
+- **Clipboard & text input** — clipboard text sync with the remote host; Cmd+Shift+V (macOS) or Ctrl+Shift+V opens a send-text window that bypasses key mapping entirely
 - **Keyboard-layout independent** — keys are translated from their *physical* position (X11 keysyms for VNC, PC/XT scancodes for RDP/SPICE), so a Dvorak or AZERTY layout on your machine never leaks into the remote session
 - **Dark & light themes + English / 中文** — the interface ships in English and Chinese
 - **Passwords stay off disk by default** — passwords live in memory for the current run only, unless you explicitly tick "remember password"
@@ -115,6 +115,15 @@ cargo run --release      # build and launch
 cargo test               # run tests (includes UI snapshot tests)
 ```
 
+`make` wraps the common ones — run it on its own to list the targets:
+
+```sh
+make run                 # build and launch
+make test                # the test suite
+make lint                # clippy, exactly what CI lints
+make mac                 # package the macOS app (see below)
+```
+
 Android (installing needs a device or emulator and `adb`):
 
 ```sh
@@ -130,6 +139,29 @@ anyone managing a secret. It proves the APK came from this repo; it is not a
 store-distribution identity, so generate a private keystore if you ever ship
 to an app store.
 
+### macOS package
+
+On a Mac with the Xcode command line tools:
+
+```sh
+make mac                 # .app and .zip for this machine's architecture
+make mac-universal       # one bundle holding the Apple Silicon and Intel slices
+```
+
+`make mac` runs `packaging/macos/package.sh`, which builds `AirFrame.app`
+(Info.plist, icon baked from `crates/ui/src/app_icon.rs`, ad-hoc signature) and
+zips it to `dist/AirFrame-<version>-macos-<arch>.zip`. Both slices can also be
+cross-built from Linux, given a macOS SDK:
+
+```sh
+SDKROOT=~/sdk/MacOSX15.5.sdk make mac-cross-x86_64
+```
+
+[`packaging/macos/README.md`](packaging/macos/README.md) covers what the cross
+build needs and why. Either way the bundle is only signed ad-hoc, so Gatekeeper
+quarantines a downloaded one: after unzipping, run
+`xattr -dr com.apple.quarantine AirFrame.app` once before the first launch.
+
 ### Release packaging
 
 Pushing a `v*` tag (or running the workflow manually from the Actions tab)
@@ -144,7 +176,7 @@ is not part of the release workflow yet — build it from source with `cargo apk
 (above).
 
 CI also runs clippy and the test suite on Linux and Windows for every push.
-The packaging scripts work locally too: `packaging/macos/package.sh`,
+The packaging scripts work locally too: `make mac` (above),
 `packaging/linux/package.sh --arch x86_64`, and
 `packaging/windows/airframe.wxs` (WiX) for the Windows installer.
 
@@ -156,12 +188,16 @@ The packaging scripts work locally too: `packaging/macos/package.sh`,
 
 **Keyboard shortcuts**
 
+The app's own chords use the platform's command key — **Cmd** on macOS,
+**Ctrl** on Linux and Windows — so on a Mac Ctrl stays with the remote, whose
+terminals need it (`Ctrl+W` deletes a word there, and so on).
+
 | Shortcut | Action |
 |----------|--------|
-| `Ctrl+T` | New connection |
-| `Ctrl+W` | Close current session |
+| `Cmd+T` (macOS) / `Ctrl+T` | New connection |
+| `Cmd+W` (macOS) / `Ctrl+W` | Close current session |
 | `Ctrl+Tab` | Switch between sessions |
-| `Ctrl+Shift+V` | Open the send-text window |
+| `Cmd+Shift+V` (macOS) / `Ctrl+Shift+V` | Open the send-text window |
 | `F11` | Fullscreen |
 
 ## Where data lives
