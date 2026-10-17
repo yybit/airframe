@@ -95,6 +95,8 @@ pub struct App {
     toast: Option<Toast>,
     next_tab: u64,
     applied_theme: Option<Theme>,
+    /// Cleared once the window has been fitted to the screen it opened on.
+    screen_fitted: bool,
 }
 
 impl App {
@@ -117,6 +119,7 @@ impl App {
             next_tab: 0,
             // Applied on the first frame, once we have the live context.
             applied_theme: None,
+            screen_fitted: false,
         };
         if let Some(error) = startup_error {
             app.notify(error.to_string(), Notice::Error);
@@ -992,6 +995,33 @@ impl eframe::App for App {
 }
 
 impl App {
+    /// Shrink the window to fit the screen the first time its size is known.
+    ///
+    /// eframe only clamps a requested inner size to the *monitor* size, which is
+    /// bigger than the space a window may use: the menu bar and the Dock take a
+    /// bite out of it, so a window as tall as the whole screen comes up with its
+    /// top and bottom behind them and the user never sees the bottom of a
+    /// session. The work area itself is not exposed, so leave room for the
+    /// chrome.
+    fn fit_to_screen(&mut self, ctx: &Context) {
+        if self.screen_fitted {
+            return;
+        }
+        let Some(monitor) = ctx.input(|i| i.viewport().monitor_size) else {
+            return; // Not known until the window exists; try again next frame.
+        };
+        let Some(inner) = ctx.input(|i| i.viewport().inner_rect) else {
+            return;
+        };
+        self.screen_fitted = true;
+
+        const CHROME: Vec2 = vec2(24.0, 150.0); // title bar + menu bar + Dock
+        let target = inner.size().min(monitor - CHROME);
+        if target != inner.size() {
+            ctx.send_viewport_cmd(ViewportCommand::InnerSize(target));
+        }
+    }
+
     /// Draw the entire window into `ui`.
     ///
     /// Kept separate from the thin [`eframe::App`] adapter above so the UI can be
@@ -1000,6 +1030,7 @@ impl App {
         let ctx = ui.ctx().clone();
         let theme = self.theme();
         let lang = self.lang();
+        self.fit_to_screen(&ctx);
         if self.applied_theme != Some(theme) {
             ui_theme::apply(&ctx, theme);
             self.applied_theme = Some(theme);
