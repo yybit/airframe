@@ -44,6 +44,8 @@ pub struct Session {
     /// The interface language, so status lines follow the language picker.
     language: Lang,
     pub error: Option<String>,
+    /// The server asked for a password; the UI should prompt for one.
+    pub needs_password: bool,
     pub name: String,
     pub size: (u32, u32),
     pub zoom: Zoom,
@@ -106,6 +108,7 @@ impl Session {
             status: lang.pick("Starting…", "正在连接…").into(),
             language: lang,
             error: None,
+            needs_password: false,
             name,
             size: (0, 0),
             zoom: Zoom::Fit,
@@ -156,6 +159,7 @@ impl Session {
         self.state = State::Connecting;
         self.status = self.language.pick("Starting…", "正在连接…").into();
         self.error = None;
+        self.needs_password = false;
         self.texture = None;
         self.size = (0, 0);
         self.framebuffer.clear();
@@ -387,6 +391,10 @@ impl Session {
                 self.error = Some(message);
                 self.state = State::Failed;
             }
+            SessionEvent::NeedsPassword => {
+                self.needs_password = true;
+                self.state = State::Failed;
+            }
             SessionEvent::Disconnected => {
                 // A run of typed text belongs to the session it was made in: it
                 // must not land in whatever the next connection turns out to be.
@@ -394,6 +402,10 @@ impl Session {
                 if self.closing {
                     self.state = State::Idle;
                     self.status = self.language.pick("Disconnected", "已断开").into();
+                } else if self.needs_password {
+                    // Waiting for the user to supply a password; retrying now
+                    // would just fail the same way.
+                    self.state = State::Failed;
                 } else {
                     // Any teardown the user did not ask for is worth another
                     // attempt; the backends report a dead worker as an error

@@ -107,6 +107,9 @@ pub enum SessionEvent {
     Bell,
     /// A recoverable-looking failure, reported before the session ends.
     Error(String),
+    /// The server asked for a password the connection does not have. The UI
+    /// should prompt for one; the session waits instead of retrying.
+    NeedsPassword,
     /// The session ended.
     Disconnected,
 }

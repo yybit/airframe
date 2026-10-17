@@ -5,8 +5,8 @@ use std::f32::consts::TAU;
 use airframe_core::{Lang, Protocol, SessionCommand, Theme};
 use airframe_ui::{Icon, State, palette};
 use egui::{
-    Align, Align2, Area, Color32, CornerRadius, Frame, FontId, Id, Layout, Margin, Order, Painter,
-    Pos2, Rect, RichText, Sense, Shape, Stroke, Ui, Vec2, pos2, vec2,
+    Align, Align2, Area, Color32, CornerRadius, EventFilter, Frame, FontId, Id, Layout, Margin,
+    Order, Painter, Pos2, Rect, RichText, Sense, Shape, Stroke, Ui, Vec2, pos2, vec2,
 };
 
 use crate::app::{Action, Tab};
@@ -29,7 +29,11 @@ pub fn show(
     let mut actions = Vec::new();
 
     let rect = ui.available_rect_before_wrap();
-    let response = ui.allocate_rect(rect, Sense::click_and_drag());
+    let response = ui
+        .push_id(Id::new("airframe-viewport"), |ui| {
+            ui.allocate_rect(rect, Sense::click_and_drag())
+        })
+        .response;
     let painter = ui.painter_at(rect);
 
     painter.rect_filled(rect, CornerRadius::same(10), p.viewport);
@@ -101,7 +105,7 @@ pub fn show(
 
     pointer_input(ui, &response, session, image, (w, h));
     scroll_input(ui, &response, session);
-    key_input(ui, session);
+    key_input(ui, &response, session);
 
     actions
 }
@@ -246,10 +250,15 @@ fn scroll_input(ui: &Ui, response: &egui::Response, session: &mut Session) {
     });
 }
 
-fn key_input(ui: &Ui, session: &mut Session) {
+fn key_input(ui: &Ui, response: &egui::Response, session: &mut Session) {
     if session.view_only || ui.ctx().egui_wants_keyboard_input() {
         return;
     }
+
+    // Tab belongs to the remote session, not to egui's focus traversal.
+    ui.ctx().memory_mut(|mem| {
+        mem.set_focus_lock_filter(response.id, EventFilter { tab: true, ..Default::default() });
+    });
 
     // Modifier keys never arrive as key events, so their transitions are
     // derived from the modifier state and synthesised here.

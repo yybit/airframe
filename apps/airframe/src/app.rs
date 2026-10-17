@@ -64,6 +64,16 @@ struct Toast {
     until: Instant,
 }
 
+/// A password prompt for a session whose server asked for a password the
+/// connection does not have.
+#[derive(Clone)]
+pub struct PasswordPrompt {
+    /// Index into `App::tabs` of the session that needs a password.
+    pub tab: usize,
+    pub buffer: String,
+    pub remember: bool,
+}
+
 pub struct App {
     pub store: Store,
     pub tabs: Vec<Tab>,
@@ -75,6 +85,8 @@ pub struct App {
     pub confirm_delete: Option<Uuid>,
     /// Open when the "send text to the remote" dialog is on screen.
     pub send_text: Option<String>,
+    /// Open when a session's server asks for a password the connection lacks.
+    pub password_prompt: Option<PasswordPrompt>,
     /// Passwords typed without "remember on this device": kept for this run
     /// only, never written to the store. Keyed by connection id.
     run_passwords: HashMap<Uuid, String>,
@@ -97,6 +109,7 @@ impl App {
             settings_open: false,
             confirm_delete: None,
             send_text: None,
+            password_prompt: None,
             run_passwords: HashMap::new(),
             collapsed_groups: BTreeSet::new(),
             actions: Vec::new(),
@@ -245,7 +258,7 @@ impl App {
         let lang = self.lang();
         let mut busy = false;
         let mut copied = false;
-        for tab in &mut self.tabs {
+        for (index, tab) in self.tabs.iter_mut().enumerate() {
             // Text the remote copied comes back through the protocol; the local
             // clipboard and the word about it are the window's business.
             if let Some(text) = tab.session.pump(ctx, lang) {
@@ -254,6 +267,13 @@ impl App {
             }
             if matches!(tab.session.state, State::Live | State::Connecting) {
                 busy = true;
+            }
+            if tab.session.needs_password && self.password_prompt.is_none() {
+                self.password_prompt = Some(PasswordPrompt {
+                    tab: index,
+                    buffer: String::new(),
+                    remember: tab.session.connection.remember_password,
+                });
             }
         }
         if copied {
@@ -273,6 +293,7 @@ impl App {
             || self.settings_open
             || self.confirm_delete.is_some()
             || self.send_text.is_some()
+            || self.password_prompt.is_some()
         {
             return;
         }
@@ -419,7 +440,8 @@ impl App {
         let dialogs_open = self.editor.is_some()
             || self.settings_open
             || self.confirm_delete.is_some()
-            || self.send_text.is_some();
+            || self.send_text.is_some()
+            || self.password_prompt.is_some();
         let actions = match self.tabs.get_mut(active) {
             Some(tab) => viewport::show(ui, tab, active, theme, lang, dialogs_open),
             None => Vec::new(),
@@ -447,6 +469,7 @@ impl App {
         self.settings_window(ctx, theme);
         self.delete_dialog(ctx, theme);
         self.send_text_dialog(ctx, theme);
+        self.password_prompt_dialog(ctx, theme);
     }
 
     fn settings_window(&mut self, ctx: &Context, theme: Theme) {
@@ -456,7 +479,10 @@ impl App {
         let p = palette(theme);
         let mut open = true;
         let mut changed = false;
+        // Import/export need a native file dialog, which Android has none of.
+        #[cfg(not(target_os = "android"))]
         let mut import = false;
+        #[cfg(not(target_os = "android"))]
         let mut export = false;
         let lang = self.lang();
 
@@ -529,6 +555,7 @@ impl App {
                     .color(p.text_faint),
                 );
                 ui.add_space(6.0);
+                #[cfg(not(target_os = "android"))]
                 ui.horizontal(|ui| {
                     if ui.button(lang.pick("Import\u{2026}", "导入\u{2026}")).clicked() {
                         import = true;
@@ -553,14 +580,15 @@ impl App {
         if changed {
             self.save();
         }
+        #[cfg(not(target_os = "android"))]
         if import {
             self.import_connections();
         }
+        #[cfg(not(target_os = "android"))]
         if export {
             self.export_connections();
         }
     }
-
     fn delete_dialog(&mut self, ctx: &Context, theme: Theme) {
         let Some(id) = self.confirm_delete else {
             return;
@@ -714,8 +742,107 @@ impl App {
         }
     }
 
+    fn password_prompt_dialog(&mut self, ctx: &Context, theme: Theme) {
+        let p = palette(theme);
+        let lang = self.lang();
+        let Some(prompt) = self.password_prompt.as_mut() else {
+            return;
+        };
+        let mut connect = false;
+        let mut cancel = false;
+        egui::Window::new(lang.pick("Password required", "需要密码"))
+            .id(Id::new("airframe-password-prompt"))
+            .collapsible(false)
+            .resizable(false)
+            .anchor(Align2::CENTER_CENTER, Vec2::ZERO)
+            .default_width(400.0)
+            .frame(dialog_frame(theme))
+            .show(ctx, |ui| {
+                ui.label(
+                    RichText::new(lang.pick(
+                        "This server requires a password. Enter it below to connect.",
+                        "此服务器需要密码。在下方输入密码以连接。",
+                    ))
+                    .size(12.0)
+                    .color(p.text_faint),
+                );
+                ui.add_space(10.0);
+                let _ = ui.add(
+                    egui::TextEdit::singleline(&mut prompt.buffer)
+                        .password(true)
+                        .desired_width(f32::INFINITY)
+                        .hint_text(lang.pick("Password", "密码")),
+                );
+                ui.add_space(8.0);
+                ui.checkbox(
+                    &mut prompt.remember,
+                    lang.pick("Remember on this device", "在此设备上记住"),
+                );
+                ui.add_space(12.0);
+                ui.horizontal(|ui| {
+                    if ui.button(lang.pick("Cancel", "取消")).clicked() {
+                        cancel = true;
+                    }
+                    let label = RichText::new(lang.pick("Connect", "连接")).color(Color32::WHITE);
+                    let button = egui::Button::new(label)
+                        .fill(p.accent)
+                        .corner_radius(CornerRadius::same(6));
+                    if ui.add_enabled(!prompt.buffer.is_empty(), button).clicked() {
+                        connect = true;
+                    }
+                });
+            });
+
+        if connect {
+            let password = self
+                .password_prompt
+                .as_ref()
+                .map(|p| p.buffer.clone())
+                .unwrap_or_default();
+            let remember = self
+                .password_prompt
+                .as_ref()
+                .map(|p| p.remember)
+                .unwrap_or(false);
+            let tab_index = self.password_prompt.as_ref().map(|p| p.tab).unwrap_or(0);
+            let connection = self
+                .tabs
+                .get_mut(tab_index)
+                .map(|tab| {
+                    tab.session.connection.password = Some(password.clone());
+                    tab.session.needs_password = false;
+                    if remember {
+                        tab.session.connection.remember_password = true;
+                    }
+                    tab.session.connection.clone()
+                });
+            if let Some(connection) = connection {
+                if remember {
+                    self.store.upsert(connection);
+                    self.save();
+                } else {
+                    self.run_passwords.insert(connection.id, password.clone());
+                }
+            }
+            if let Some(tab) = self.tabs.get_mut(tab_index) {
+                tab.session.restart();
+            }
+            self.password_prompt = None;
+        } else if cancel {
+            let tab_index = self.password_prompt.as_ref().map(|p| p.tab).unwrap_or(0);
+            if let Some(tab) = self.tabs.get_mut(tab_index) {
+                tab.session.needs_password = false;
+            }
+            self.password_prompt = None;
+        }
+    }
+
     /// Connections are exported without their passwords, so a shared file never
     /// leaks a credential the user only meant to keep locally.
+    ///
+    /// Only offered where a native file dialog exists; Android has neither, so
+    /// the buttons are hidden there too.
+    #[cfg(not(target_os = "android"))]
     fn export_connections(&mut self) {
         let lang = self.lang();
         let Some(path) = rfd::FileDialog::new()
@@ -752,6 +879,7 @@ impl App {
         }
     }
 
+    #[cfg(not(target_os = "android"))]
     fn import_connections(&mut self) {
         let lang = self.lang();
         let Some(path) = rfd::FileDialog::new()
@@ -848,6 +976,13 @@ impl eframe::App for App {
     /// reporter shows as a crash on quit. Exiting here keeps that off the
     /// user's screen; eframe has already saved by this point, and the config
     /// store is written on every change, so nothing is lost.
+    ///
+    /// Android builds use eframe's glow renderer, whose `on_exit` passes the
+    /// glow context; the two signatures below are otherwise the same method.
+    #[cfg(target_os = "android")]
+    fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {}
+
+    #[cfg(not(target_os = "android"))]
     fn on_exit(&mut self) {
         #[cfg(target_os = "macos")]
         std::process::exit(0);

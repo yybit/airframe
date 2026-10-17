@@ -94,6 +94,7 @@ fn run(connection: &Connection, cmd_rx: Receiver<Cmd>, evt_tx: &Sender<SessionEv
     })
     .map_err(|e| {
         if asked_for_password.get() {
+            evt_tx.send(SessionEvent::NeedsPassword).ok();
             "the server asked for a VNC password, but none is set for this connection".to_string()
         } else {
             format!("VNC handshake failed: {e}")
