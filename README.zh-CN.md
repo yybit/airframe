@@ -8,7 +8,7 @@
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Rust](https://img.shields.io/badge/rust-1.95%2B-orange.svg)](https://www.rust-lang.org)
-[![Version](https://img.shields.io/badge/version-0.1.1-green.svg)]()
+[![Version](https://img.shields.io/badge/version-0.1.2-green.svg)]()
 [![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey.svg)](#从源码构建)
 
 [简体中文](#) · [English](README.md)
@@ -28,7 +28,7 @@ macOS、Windows 和 Linux 的预构建安装包发布在 [GitHub Releases](https
 ## 特性
 
 - **三种协议，一个客户端** — VNC (RFB)、RDP、SPICE；新建连接时选协议，端口自动填好默认值
-- **原生 GPU 界面** — 基于 egui/eframe，Linux (X11/Wayland)、macOS、Windows 和 Android 上开箱即用
+- **原生 GPU 界面** — 基于 egui/eframe，Linux (X11/Wayland)、macOS、Windows 上开箱即用，另有实验性的 Android 构建
 - **连接管理** — 分组、搜索、标签页、`vnc://` / `rdp://` / `spice://` 链接导入分享
 - **舒适的远程会话** — 悬浮工具栏、全屏、三种缩放（适应窗口 / 1:1 / 拉伸）、只读模式
 - **剪贴板与文本输入** — 与远程主机同步剪贴板文本，另有绕过键盘映射直接输入文本的发送窗口
@@ -196,12 +196,12 @@ CI 会在每次推送时于 Linux 和 Windows 上运行 clippy 与测试。
 
 - Linux / Unix：`~/.config/airframe/airframe.json`（遵循 `$XDG_CONFIG_HOME`）
 - macOS：`~/Library/Application Support/AirFrame/airframe.json`
-- Android：`/data/data/dev.airframe.app/files/airframe.json` —— 应用私有目录，卸载应用即被清除
+- Android（实验性）：`/data/data/dev.airframe.app/files/airframe.json` —— 应用私有目录，卸载应用即被清除
 
 ## 项目结构
 
 ```
-apps/airframe        应用本体：界面、会话管理、输入与快捷键（库 + 桌面可执行）
+apps/airframe        应用本体：界面、会话管理、远程输入（库 + 桌面可执行）
 apps/airframe-android  Android 入口（`android_main`），由 cargo-apk 打包
 crates/core          协议无关核心：连接模型、会话契约、本地存储
 crates/vnc           VNC (RFB) 后端
@@ -217,7 +217,7 @@ packaging/windows    Windows 安装包定义（WiX .wxs）
 
 ## 项目状态
 
-v0.1.1，仍处于早期开发阶段，接口与配置格式都可能变化。
+v0.1.2，仍处于早期开发阶段，接口与配置格式都可能变化。
 
 ## 参与贡献
 

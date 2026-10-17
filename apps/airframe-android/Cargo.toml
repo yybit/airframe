@@ -1,0 +1,51 @@
+[package]
+name = "airframe-android"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+description = "Android entry point for AirFrame"
+
+# The `android_main` entry point needs `#[unsafe(no_mangle)]`, which the
+# workspace's `unsafe_code = "forbid"` cannot grant. This crate declares its
+# own lints instead of inheriting the workspace's, and is kept to the entry
+# point alone so nothing else loses the guard.
+[lints.rust]
+unsafe_code = "allow"
+
+# cargo-apk builds the cdylib; `--lib` selects it.
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+airframe = { path = "../airframe" }
+
+[target.'cfg(target_os = "android")'.dependencies]
+winit = { workspace = true, features = ["android-native-activity"] }
+
+[package.metadata.android]
+# The Android application id; also where the store file lives
+# (/data/data/dev.airframe.app/files/airframe.json).
+package = "dev.airframe.app"
+apk_name = "airframe"
+build_targets = [
+    "aarch64-linux-android",
+    "armv7-linux-androideabi",
+    "x86_64-linux-android",
+]
+# Drop debug symbols from the packaged .so; without this a build carries
+# hundreds of megabytes of DWARF. (`split` keeps them in a side file instead.)
+strip = "strip"
+
+# Release builds must be signed (cargo-apk refuses to package otherwise). The
+# keystore is committed on purpose: a public key keeps installs upgrade-compatible
+# without asking anyone to manage a secret. It proves the APK came from this repo;
+# it is NOT a store-distribution identity — regenerate a private one for that and
+# keep it out of the repo.
+[package.metadata.android.signing.release]
+path = "release.keystore"
+keystore_password = "airframe"
+
+[package.metadata.android.sdk]
+min_sdk_version = 23
+target_sdk_version = 35

@@ -4,7 +4,7 @@ members = ["crates/*", "apps/*"]
 default-members = ["crates/*", "apps/airframe"]
 
 [workspace.package]
-version = "0.1.1"
+version = "0.1.2"
 edition = "2024"
 license = "Apache-2.0"
 rust-version = "1.95"
@@ -31,6 +31,10 @@ uuid = { version = "1", features = ["v4", "serde"] }
 crossbeam-channel = "0.5"
 log = "0.4"
 env_logger = "0.11"
+# Android entry point (see apps/airframe-android); winit tracks eframe's own
+# winit version so the re-exported `AndroidApp` type is the same one.
+winit = "0.30"
+android_logger = "0.15"
 
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "time", "sync", "io-util"] }
 

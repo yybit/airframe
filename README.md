@@ -8,7 +8,7 @@
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Rust](https://img.shields.io/badge/rust-1.95%2B-orange.svg)](https://www.rust-lang.org)
-[![Version](https://img.shields.io/badge/version-0.1.1-green.svg)]()
+[![Version](https://img.shields.io/badge/version-0.1.2-green.svg)]()
 [![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey.svg)](#building-from-source)
 
 [English](#) · [简体中文](README.zh-CN.md)
@@ -23,12 +23,12 @@
 
 AirFrame is a native remote-desktop client written in Rust. It puts the three major protocols — VNC, RDP and SPICE — into one lightweight, GPU-accelerated interface, with unified handling of connections, input and clipboard, so you don't need a different client for every machine.
 
-Prebuilt installers for macOS, Windows and Linux are published on [GitHub Releases](https://github.com/yybit/airframe/releases/latest).
+Prebuilt installers for macOS, Windows and Linux are published on [GitHub Releases](https://github.com/yybit/airframe/releases/latest). An experimental Android build is available from source — the layout is still desktop-oriented and it is not part of the release workflow yet.
 
 ## Features
 
 - **Three protocols, one client** — VNC (RFB), RDP and SPICE; pick a protocol when creating a connection and the default port fills itself in
-- **Native GPU-rendered UI** — built on egui/eframe; works out of the box on Linux (X11/Wayland), macOS, Windows and Android
+- **Native GPU-rendered UI** — built on egui/eframe; works out of the box on Linux (X11/Wayland), macOS and Windows, and has an experimental Android build
 - **Connection management** — groups, search, tabs, `vnc://` / `rdp://` / `spice://` links for sharing and importing
 - **Comfortable sessions** — overlay toolbar, fullscreen, three zoom modes (fit / 1:1 / stretch), view-only mode
 - **Clipboard & text input** — clipboard text sync with the remote host, plus a send-text window that bypasses key mapping entirely
@@ -201,12 +201,12 @@ Saved connections and preferences are stored as plain JSON (passwords are writte
 
 - Linux / Unix: `~/.config/airframe/airframe.json` (respects `$XDG_CONFIG_HOME`)
 - macOS: `~/Library/Application Support/AirFrame/airframe.json`
-- Android: `/data/data/dev.airframe.app/files/airframe.json` — the app's private storage, removed when the app is uninstalled
+- Android (experimental): `/data/data/dev.airframe.app/files/airframe.json` — the app's private storage, removed when the app is uninstalled
 
 ## Project layout
 
 ```
-apps/airframe        App: UI, session management, input, shortcuts (lib + desktop binary)
+apps/airframe        App: UI, session management, remote input (lib + desktop binary)
 apps/airframe-android  Android entry point (`android_main`), packaged by cargo-apk
 crates/core          Protocol-agnostic core: connection model, session contract, on-disk store
 crates/vnc           VNC (RFB) backend
@@ -222,7 +222,7 @@ Architecturally, the UI and the protocol backends don't depend on each other —
 
 ## Status
 
-v0.1.1, early days — interfaces and on-disk formats may still change.
+v0.1.2, early days — interfaces and on-disk formats may still change.
 
 ## Contributing
 

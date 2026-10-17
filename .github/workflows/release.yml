@@ -4,7 +4,8 @@ name: Release
 # GitHub Release. Triggered by a version tag (`v0.1.0`) or by hand from the
 # Actions tab; macOS packages are signed and notarised only when the matching
 # secrets are configured, otherwise they ship ad-hoc signed (unsigned Windows
-# installers trigger a SmartScreen prompt).
+# installers trigger a SmartScreen prompt). Android is built locally for now
+# (experimental; see the README).
 
 on:
   push:

@@ -16,8 +16,6 @@ airframe-rdp = { workspace = true }
 airframe-spice = { workspace = true }
 airframe-ui = { workspace = true }
 egui = { workspace = true }
-eframe = { workspace = true }
-rfd = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 uuid = { workspace = true }
@@ -26,6 +24,25 @@ env_logger = { workspace = true }
 # Screenshots and the macOS bundle icon; see session.rs and
 # examples/export_app_icon.rs.
 png = "0.17"
+
+# Desktop keeps eframe's defaults (the wgpu renderer, X11/Wayland, accesskit)
+# and gets the native file dialogs, which have no Android backend.
+[target.'cfg(not(target_os = "android"))'.dependencies]
+eframe = { workspace = true }
+rfd = { workspace = true }
+
+# Android renders through glow — the backend egui's own Android example uses —
+# with the native-activity glue, and logs to logcat instead of stderr. Stated
+# with an explicit version because the workspace's `eframe` keeps its defaults
+# (the desktop renderer) and workspace inheritance cannot drop them.
+[target.'cfg(target_os = "android")'.dependencies]
+eframe = { version = "0.36", default-features = false, features = [
+    "default_fonts",
+    "glow",
+    "android-native-activity",
+] }
+winit = { workspace = true }
+android_logger = { workspace = true }
 
 [dev-dependencies]
 egui_kittest = { version = "0.36", features = ["wgpu", "snapshot", "x11"] }
