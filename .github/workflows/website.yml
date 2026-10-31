@@ -1,0 +1,43 @@
+name: Website
+
+# Publish the pre-built static site in website/ to GitHub Pages, served from
+# https://yybit.github.io/airframe/. Enable it once per repository under
+# Settings → Pages → Build and deployment → Source: GitHub Actions.
+#
+# The site uses relative links only, so it works unchanged under the
+# /airframe/ path prefix that Pages project sites add.
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'website/**'
+      - '.github/workflows/website.yml'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: website-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: GitHub Pages
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: website
+      - id: deployment
+        uses: actions/deploy-pages@v4

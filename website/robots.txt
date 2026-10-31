@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://airframe.rusttool.com/sitemap.xml
+Sitemap: https://yybit.github.io/airframe/sitemap.xml

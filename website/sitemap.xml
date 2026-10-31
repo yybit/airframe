@@ -2,17 +2,17 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://airframe.rusttool.com/</loc>
+    <loc>https://yybit.github.io/airframe/</loc>
     <lastmod>2026-10-20</lastmod>
-    <xhtml:link rel="alternate" hreflang="en" href="https://airframe.rusttool.com/"/>
-    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://airframe.rusttool.com/zh/"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://airframe.rusttool.com/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://yybit.github.io/airframe/"/>
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://yybit.github.io/airframe/zh/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://yybit.github.io/airframe/"/>
   </url>
   <url>
-    <loc>https://airframe.rusttool.com/zh/</loc>
+    <loc>https://yybit.github.io/airframe/zh/</loc>
     <lastmod>2026-10-20</lastmod>
-    <xhtml:link rel="alternate" hreflang="en" href="https://airframe.rusttool.com/"/>
-    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://airframe.rusttool.com/zh/"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://airframe.rusttool.com/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://yybit.github.io/airframe/"/>
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://yybit.github.io/airframe/zh/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://yybit.github.io/airframe/"/>
   </url>
 </urlset>
